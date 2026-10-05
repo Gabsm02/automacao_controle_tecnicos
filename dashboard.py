@@ -10,7 +10,7 @@ st.set_page_config(page_title="Controle de Técnicos", page_icon="📊", layout=
 
 
 # =========================================================
-# 2. ESTILO
+# 2. ESTILO DO DASHBOARD
 # =========================================================
 
 st.markdown(
@@ -27,7 +27,7 @@ st.markdown(
         border: 1px solid #e5e7eb;
         padding: 20px;
         border-radius: 15px;
-        box-shadow: 0px 2px 8px rgba(0,0,0,0.05);
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.05);
     }
 
     div[data-testid="stMetricValue"] {
@@ -54,14 +54,14 @@ st.caption(
 
 
 # =========================================================
-# 4. ARQUIVO
+# 4. CONFIGURACAO DO ARQUIVO
 # =========================================================
 
 arquivo = "Base_Final.xlsx"
 
 
 # =========================================================
-# 5. CARREGAR BASE
+# 5. CARREGANDO A BASE
 # =========================================================
 
 
@@ -116,7 +116,7 @@ colunas_faltando = [
 
 if colunas_faltando:
 
-    st.error("Algumas colunas não foram encontradas na Base_Final.xlsx.")
+    st.error("Algumas colunas necessárias não foram encontradas " "na Base_Final.xlsx.")
 
     st.write("Colunas faltando:", colunas_faltando)
 
@@ -126,7 +126,7 @@ if colunas_faltando:
 
 
 # =========================================================
-# 7. TRATAMENTO DOS DADOS
+# 7. TRATAMENTO DAS COLUNAS DE TEXTO
 # =========================================================
 
 colunas_texto = [
@@ -147,7 +147,7 @@ for coluna in colunas_texto:
 
 
 # =========================================================
-# 8. TRATANDO A DATA
+# 8. TRATAMENTO DA DATA
 # =========================================================
 
 base["Data Concluída"] = pd.to_datetime(
@@ -156,7 +156,7 @@ base["Data Concluída"] = pd.to_datetime(
 
 
 # =========================================================
-# 9. FUNCAO PARA PEGAR VALORES VALIDOS
+# 9. FUNCAO PARA RETORNAR VALORES SEM VAZIOS
 # =========================================================
 
 
@@ -183,7 +183,7 @@ st.sidebar.caption("Utilize os filtros para analisar a operação.")
 
 
 # =========================================================
-# 11. BUSCA RAPIDA
+# 11. PESQUISA RAPIDA POR TECNICO
 # =========================================================
 
 busca_recurso = st.sidebar.text_input(
@@ -192,7 +192,7 @@ busca_recurso = st.sidebar.text_input(
 
 
 # =========================================================
-# 12. LISTAS PARA OS FILTROS
+# 12. LISTAS DOS FILTROS
 # =========================================================
 
 lista_tecnicos = valores_validos(base, "Recurso")
@@ -211,7 +211,7 @@ lista_classificacao = valores_validos(base, "CLASSIFICACAO")
 
 
 # =========================================================
-# 13. DIAS DA SEMANA
+# 13. ORDEM DOS DIAS
 # =========================================================
 
 ordem_dias = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"]
@@ -255,7 +255,7 @@ origem = st.sidebar.multiselect(
 # =========================================================
 
 coord = st.sidebar.multiselect(
-    "Coordenador", lista_coord, default=[], placeholder="Todos os coordenadores"
+    "COORD", lista_coord, default=[], placeholder="Todos os coordenadores"
 )
 
 
@@ -299,13 +299,39 @@ dia_semana = st.sidebar.multiselect(
 
 
 # =========================================================
-# 22. APLICANDO OS FILTROS
+# 22. FILTRO DE PERIODO
+# =========================================================
+
+datas_validas = base["Data Concluída"].dropna()
+
+
+if not datas_validas.empty:
+
+    data_minima = datas_validas.min().date()
+
+    data_maxima = datas_validas.max().date()
+
+    periodo = st.sidebar.date_input(
+        "📅 Período",
+        value=(data_minima, data_maxima),
+        min_value=data_minima,
+        max_value=data_maxima,
+        format="DD/MM/YYYY",
+    )
+
+else:
+
+    periodo = None
+
+
+# =========================================================
+# 23. APLICANDO OS FILTROS
 # =========================================================
 
 df = base.copy()
 
 
-# Busca pelo técnico
+# Pesquisa pelo nome
 if busca_recurso:
 
     df = df[df["Recurso"].str.contains(busca_recurso, case=False, na=False)]
@@ -329,7 +355,7 @@ if origem:
     df = df[df["Origem"].isin(origem)]
 
 
-# Coordenador
+# COORD
 if coord:
 
     df = df[df["COORD"].isin(coord)]
@@ -353,14 +379,24 @@ if classificacao:
     df = df[df["CLASSIFICACAO"].isin(classificacao)]
 
 
-# Dia da Semana
+# Dia da semana
 if dia_semana:
 
     df = df[df["Dia Semana"].isin(dia_semana)]
 
 
+# Período
+if periodo and isinstance(periodo, (list, tuple)) and len(periodo) == 2:
+
+    data_inicio = pd.Timestamp(periodo[0])
+
+    data_fim = pd.Timestamp(periodo[1])
+
+    df = df[(df["Data Concluída"] >= data_inicio) & (df["Data Concluída"] <= data_fim)]
+
+
 # =========================================================
-# 23. INDICADORES
+# 24. INDICADORES GERAIS
 # =========================================================
 
 total_registros = len(df)
@@ -388,7 +424,7 @@ else:
 
 
 # =========================================================
-# 24. CARDS
+# 25. CARDS
 # =========================================================
 
 col1, col2, col3, col4, col5 = st.columns(5)
@@ -423,14 +459,15 @@ st.divider()
 
 
 # =========================================================
-# 25. ATIVIDADES POR SUPERVISOR + ORIGEM
+# 26. PRIMEIRA LINHA
+# SUPERVISOR + ORIGEM
 # =========================================================
 
 grafico1, grafico2 = st.columns([2, 1])
 
 
 # =========================================================
-# SUPERVISOR
+# 27. ATIVIDADES POR SUPERVISOR
 # =========================================================
 
 with grafico1:
@@ -460,7 +497,7 @@ with grafico1:
         fig_supervisor.update_layout(
             coloraxis_showscale=False,
             xaxis_title="Supervisor",
-            yaxis_title="Atividades",
+            yaxis_title="Quantidade de Atividades",
         )
 
         fig_supervisor.update_traces(textposition="outside")
@@ -469,11 +506,11 @@ with grafico1:
 
     else:
 
-        st.info("Nenhuma informação de supervisor encontrada.")
+        st.info("Nenhuma informação de Supervisor.")
 
 
 # =========================================================
-# ORIGEM
+# 28. ORIGEM DAS ATIVIDADES
 # =========================================================
 
 with grafico2:
@@ -500,18 +537,19 @@ with grafico2:
 
     else:
 
-        st.info("Nenhuma informação de origem encontrada.")
+        st.info("Nenhuma informação de Origem.")
 
 
 # =========================================================
-# 26. COORD + CLASSIFICACAO
+# 29. SEGUNDA LINHA
+# COORD + CLASSIFICACAO
 # =========================================================
 
 grafico3, grafico4 = st.columns(2)
 
 
 # =========================================================
-# COORD
+# 30. ATIVIDADES POR COORD
 # =========================================================
 
 with grafico3:
@@ -545,15 +583,17 @@ with grafico3:
             yaxis_title="COORD",
         )
 
+        fig_coord.update_traces(textposition="outside")
+
         st.plotly_chart(fig_coord, use_container_width=True)
 
     else:
 
-        st.info("Nenhuma informação de COORD encontrada.")
+        st.info("Nenhuma informação de COORD.")
 
 
 # =========================================================
-# CLASSIFICACAO
+# 31. CLASSIFICACAO
 # =========================================================
 
 with grafico4:
@@ -564,7 +604,7 @@ with grafico4:
 
     if not df_classificacao.empty:
 
-        class_df = (
+        classificacao_df = (
             df_classificacao.groupby("CLASSIFICACAO")
             .size()
             .reset_index(name="Quantidade")
@@ -572,7 +612,7 @@ with grafico4:
         )
 
         fig_classificacao = px.bar(
-            class_df,
+            classificacao_df,
             x="CLASSIFICACAO",
             y="Quantidade",
             text="Quantidade",
@@ -589,18 +629,19 @@ with grafico4:
 
     else:
 
-        st.info("Nenhuma classificação encontrada.")
+        st.info("Nenhuma informação de Classificação.")
 
 
 # =========================================================
-# 27. TIPO + STATUS
+# 32. TERCEIRA LINHA
+# TIPO + STATUS
 # =========================================================
 
 grafico5, grafico6 = st.columns(2)
 
 
 # =========================================================
-# TIPO
+# 33. ATIVIDADES POR TIPO
 # =========================================================
 
 with grafico5:
@@ -632,15 +673,17 @@ with grafico5:
             coloraxis_showscale=False, xaxis_title="Quantidade", yaxis_title="Tipo"
         )
 
+        fig_tipo.update_traces(textposition="outside")
+
         st.plotly_chart(fig_tipo, use_container_width=True)
 
     else:
 
-        st.info("Nenhuma informação de Tipo encontrada.")
+        st.info("Nenhuma informação de Tipo.")
 
 
 # =========================================================
-# STATUS
+# 34. DISTRIBUICAO POR STATUS
 # =========================================================
 
 with grafico6:
@@ -672,11 +715,11 @@ with grafico6:
 
     else:
 
-        st.info("Nenhuma informação de Status encontrada.")
+        st.info("Nenhuma informação de Status.")
 
 
 # =========================================================
-# 28. ATIVIDADES POR DIA DA SEMANA
+# 35. ATIVIDADES POR DIA DA SEMANA
 # =========================================================
 
 st.divider()
@@ -703,10 +746,12 @@ if not df_dias.empty:
             dias_df, x="Dia Semana", y="Quantidade", markers=True, text="Quantidade"
         )
 
-        fig_dias.update_traces(line=dict(width=4), marker=dict(size=10))
-
         fig_dias.update_layout(
             xaxis_title="Dia da Semana", yaxis_title="Quantidade de Atividades"
+        )
+
+        fig_dias.update_traces(
+            line=dict(width=4), marker=dict(size=10), textposition="top center"
         )
 
         st.plotly_chart(fig_dias, use_container_width=True)
@@ -717,154 +762,299 @@ if not df_dias.empty:
 
 else:
 
-    st.info("Nenhuma informação de dia da semana encontrada.")
+    st.info("Nenhuma informação de Dia da Semana.")
 
 
 # =========================================================
-# 29. ATIVIDADES DIARIAS POR TECNICO
+# 36. PRODUTIVIDADE DOS TECNICOS
 # =========================================================
 
 st.divider()
 
-st.subheader("👷 Atividades Diárias por Técnico")
+st.subheader("👷 Produtividade dos Técnicos")
 
 st.caption(
-    "Ao selecionar um COORD nos filtros, são exibidos "
-    "os técnicos desse coordenador e a quantidade de "
-    "atividades realizada por cada técnico em cada data."
+    "A análise abaixo respeita todos os filtros selecionados, "
+    "incluindo COORD, Supervisor, Técnico, Tipo e Período."
 )
 
 
-# =========================================================
-# PREPARANDO DADOS
-# =========================================================
-
-df_tecnico_dia = df[(df["Recurso"] != "") & (df["Data Concluída"].notna())].copy()
+df_produtividade = df[(df["Recurso"] != "") & (df["Data Concluída"].notna())].copy()
 
 
-if not df_tecnico_dia.empty:
+if not df_produtividade.empty:
 
     # =====================================================
-    # CRIANDO DATA SEM HORARIO
+    # 37. CRIANDO DATA SEM HORARIO
     # =====================================================
 
-    df_tecnico_dia["Data"] = df_tecnico_dia["Data Concluída"].dt.normalize()
+    df_produtividade["Data"] = df_produtividade["Data Concluída"].dt.normalize()
 
     # =====================================================
-    # CONTANDO ATIVIDADES POR TECNICO E DATA
+    # 38. TOTAL POR TECNICO
+    # Essa variável serve apenas para ordenar o Heatmap
     # =====================================================
 
-    atividades_diarias = (
-        df_tecnico_dia.groupby(["Recurso", "Data"])
+    total_atividades_tecnico = (
+        df_produtividade.groupby("Recurso")
+        .size()
+        .reset_index(name="Quantidade")
+        .sort_values("Quantidade", ascending=False)
+    )
+
+    # =====================================================
+    # 39. HEATMAP
+    # =====================================================
+
+    st.markdown("### 🔥 Atividades por Técnico e Data")
+
+    st.caption(
+        "Cada célula representa a quantidade de atividades "
+        "do técnico naquela data. Cores mais escuras "
+        "representam maior volume de atividades."
+    )
+
+    heatmap_df = (
+        df_produtividade.groupby(["Recurso", "Data"])
         .size()
         .reset_index(name="Quantidade")
     )
 
     # =====================================================
-    # ORDENANDO
+    # CRIANDO MATRIZ TECNICO X DATA
     # =====================================================
 
-    atividades_diarias = atividades_diarias.sort_values(["Data", "Recurso"])
-
-    # =====================================================
-    # FORMATANDO DATA
-    # =====================================================
-
-    atividades_diarias["Data Formatada"] = atividades_diarias["Data"].dt.strftime(
-        "%d/%m/%Y"
-    )
-
-    # =====================================================
-    # ORDEM CRONOLOGICA DAS DATAS
-    # =====================================================
-
-    ordem_datas = (
-        atividades_diarias.sort_values("Data")["Data Formatada"]
-        .drop_duplicates()
-        .tolist()
-    )
-
-    # =====================================================
-    # GRAFICO
-    # =====================================================
-
-    fig_tecnico_dia = px.bar(
-        atividades_diarias,
-        x="Recurso",
-        y="Quantidade",
-        color="Data Formatada",
-        barmode="group",
-        text="Quantidade",
-        category_orders={"Data Formatada": ordem_datas},
-        labels={
-            "Recurso": "Técnico",
-            "Quantidade": "Atividades",
-            "Data Formatada": "Data",
-        },
-    )
-
-    fig_tecnico_dia.update_layout(
-        xaxis_title="Técnico",
-        yaxis_title="Quantidade de Atividades",
-        legend_title="Data",
-        height=650,
-        bargap=0.15,
-        bargroupgap=0.05,
-        xaxis=dict(tickangle=-45),
-    )
-
-    fig_tecnico_dia.update_traces(textposition="outside")
-
-    st.plotly_chart(fig_tecnico_dia, use_container_width=True)
-
-    # =====================================================
-    # 30. TABELA RESUMO DIARIO
-    # =====================================================
-
-    st.markdown("### 📋 Quantidade Diária por Técnico")
-
-    tabela_tecnico_dia = atividades_diarias.pivot_table(
+    heatmap_pivot = heatmap_df.pivot_table(
         index="Recurso",
-        columns="Data Formatada",
+        columns="Data",
         values="Quantidade",
         fill_value=0,
         aggfunc="sum",
     )
 
     # =====================================================
-    # ORDENANDO COLUNAS PELA DATA
+    # ORDENANDO AS DATAS
     # =====================================================
 
-    colunas_datas = [data for data in ordem_datas if data in tabela_tecnico_dia.columns]
-
-    tabela_tecnico_dia = tabela_tecnico_dia[colunas_datas]
+    heatmap_pivot = heatmap_pivot.sort_index(axis=1)
 
     # =====================================================
-    # TOTAL POR TECNICO
+    # ORDENANDO OS TECNICOS POR VOLUME
+    # SEM EXIBIR UM RANKING SEPARADO
     # =====================================================
 
-    tabela_tecnico_dia["TOTAL"] = tabela_tecnico_dia.sum(axis=1)
+    ordem_tecnicos = total_atividades_tecnico["Recurso"].tolist()
+
+    ordem_tecnicos = [
+        tecnico for tecnico in ordem_tecnicos if tecnico in heatmap_pivot.index
+    ]
+
+    heatmap_pivot = heatmap_pivot.loc[ordem_tecnicos]
 
     # =====================================================
-    # ORDENANDO TECNICOS
+    # FORMATANDO DATAS PARA DD/MM
     # =====================================================
 
-    tabela_tecnico_dia = tabela_tecnico_dia.sort_values("TOTAL", ascending=False)
+    heatmap_pivot.columns = [data.strftime("%d/%m") for data in heatmap_pivot.columns]
 
     # =====================================================
-    # MOSTRAR TABELA
+    # CRIANDO O HEATMAP
     # =====================================================
 
-    st.dataframe(tabela_tecnico_dia, use_container_width=True)
+    fig_heatmap = px.imshow(
+        heatmap_pivot,
+        text_auto=True,
+        aspect="auto",
+        color_continuous_scale=[
+            [0.00, "#F8FAFC"],
+            [0.15, "#DBEAFE"],
+            [0.35, "#93C5FD"],
+            [0.55, "#60A5FA"],
+            [0.75, "#2563EB"],
+            [1.00, "#172554"],
+        ],
+        labels={"x": "Data", "y": "Técnico", "color": "Atividades"},
+    )
+
+    # =====================================================
+    # ALTURA DINAMICA DO HEATMAP
+    # =====================================================
+
+    altura_heatmap = max(500, len(heatmap_pivot) * 35)
+
+    fig_heatmap.update_layout(
+        height=altura_heatmap,
+        xaxis_title="Data",
+        yaxis_title="Técnico",
+        coloraxis_colorbar=dict(title="Atividades"),
+        margin=dict(l=10, r=10, t=50, b=20),
+    )
+
+    fig_heatmap.update_xaxes(side="top", tickangle=-45)
+
+    st.plotly_chart(fig_heatmap, use_container_width=True)
+
+    # =====================================================
+    # 40. TABELA DE ATIVIDADES DIARIAS
+    # =====================================================
+
+    st.markdown("### 📋 Quantidade Diária por Técnico")
+
+    tabela_diaria = heatmap_pivot.copy()
+
+    tabela_diaria["TOTAL"] = tabela_diaria.sum(axis=1)
+
+    tabela_diaria = tabela_diaria.sort_values("TOTAL", ascending=False)
+
+    st.dataframe(tabela_diaria, use_container_width=True)
+
+    # =====================================================
+    # 41. MEDIA PRODUTIVA
+    # =====================================================
+
+    st.divider()
+
+    st.subheader("📈 Média Produtiva por Técnico")
+
+    st.caption(
+        "Média produtiva = total de atividades do técnico "
+        "dividido pela quantidade de dias em que o técnico "
+        "teve pelo menos uma atividade registrada."
+    )
+
+    # =====================================================
+    # TOTAL DE ATIVIDADES POR TECNICO
+    # =====================================================
+
+    total_por_tecnico = (
+        df_produtividade.groupby("Recurso").size().reset_index(name="Total Atividades")
+    )
+
+    # =====================================================
+    # DIAS COM ATIVIDADE POR TECNICO
+    # =====================================================
+
+    dias_por_tecnico = (
+        df_produtividade.groupby("Recurso")["Data"]
+        .nunique()
+        .reset_index(name="Dias com Atividade")
+    )
+
+    # =====================================================
+    # JUNTANDO OS RESULTADOS
+    # =====================================================
+
+    media_produtiva = total_por_tecnico.merge(
+        dias_por_tecnico, on="Recurso", how="left"
+    )
+
+    # =====================================================
+    # CALCULANDO A MEDIA DIARIA
+    # =====================================================
+
+    media_produtiva["Média Diária"] = (
+        media_produtiva["Total Atividades"] / media_produtiva["Dias com Atividade"]
+    )
+
+    media_produtiva["Média Diária"] = media_produtiva["Média Diária"].round(2)
+
+    media_produtiva = media_produtiva.sort_values(
+        ["Média Diária", "Total Atividades"], ascending=[False, False]
+    )
+
+    # =====================================================
+    # 42. INDICADORES DE PRODUTIVIDADE
+    # =====================================================
+
+    media_geral = media_produtiva["Média Diária"].mean()
+
+    maior_media = media_produtiva["Média Diária"].max()
+
+    tecnico_maior_media = media_produtiva.iloc[0]["Recurso"]
+
+    quantidade_tecnicos_media = media_produtiva["Recurso"].nunique()
+
+    media1, media2, media3 = st.columns(3)
+
+    with media1:
+
+        st.metric("📊 Média Geral", f"{media_geral:.2f}")
+
+    with media2:
+
+        st.metric("🏅 Maior Média", f"{maior_media:.2f}")
+
+    with media3:
+
+        st.metric("👷 Técnicos Analisados", quantidade_tecnicos_media)
+
+    st.info(
+        f"Maior média produtiva: "
+        f"{tecnico_maior_media} "
+        f"com {maior_media:.2f} atividades/dia."
+    )
+
+    # =====================================================
+    # 43. GRAFICO DA MEDIA PRODUTIVA
+    # =====================================================
+
+    media_grafico = media_produtiva.sort_values("Média Diária", ascending=True)
+
+    fig_media = px.bar(
+        media_grafico,
+        x="Média Diária",
+        y="Recurso",
+        orientation="h",
+        text="Média Diária",
+        color="Média Diária",
+        color_continuous_scale="Greens",
+        custom_data=["Total Atividades", "Dias com Atividade"],
+        labels={"Recurso": "Técnico", "Média Diária": ("Média de Atividades por Dia")},
+    )
+
+    fig_media.update_traces(
+        textposition="outside",
+        texttemplate="%{text:.2f}",
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Média diária: %{x:.2f}<br>"
+            "Total de atividades: %{customdata[0]}<br>"
+            "Dias com atividade: %{customdata[1]}"
+            "<extra></extra>"
+        ),
+    )
+
+    altura_media = max(500, len(media_grafico) * 35)
+
+    fig_media.update_layout(
+        height=altura_media,
+        coloraxis_showscale=False,
+        xaxis_title="Média de Atividades por Dia",
+        yaxis_title="Técnico",
+    )
+
+    st.plotly_chart(fig_media, use_container_width=True)
+
+    # =====================================================
+    # 44. TABELA DE MEDIA PRODUTIVA
+    # =====================================================
+
+    st.markdown("### 📋 Resumo de Produtividade")
+
+    tabela_media = media_produtiva.rename(columns={"Recurso": "Técnico"}).reset_index(
+        drop=True
+    )
+
+    st.dataframe(tabela_media, use_container_width=True, hide_index=True)
 
 
 else:
 
-    st.info("Nenhuma atividade com data encontrada " "para os filtros selecionados.")
+    st.info("Não existem atividades com data " "para calcular a produtividade.")
 
 
 # =========================================================
-# 31. DETALHAMENTO OPERACIONAL
+# 45. DETALHAMENTO OPERACIONAL
 # =========================================================
 
 st.divider()
@@ -872,14 +1062,14 @@ st.divider()
 st.subheader("📋 Detalhamento Operacional")
 
 
-st.caption(f"{len(df)} registros encontrados.")
+st.caption(f"{len(df)} registros encontrados " "com os filtros selecionados.")
 
 
 df_exibicao = df.copy()
 
 
 # =========================================================
-# FORMATANDO DATA PARA EXIBICAO
+# 46. FORMATANDO A DATA PARA EXIBICAO
 # =========================================================
 
 df_exibicao["Data Concluída"] = (
@@ -888,7 +1078,7 @@ df_exibicao["Data Concluída"] = (
 
 
 # =========================================================
-# REMOVENDO COLUNAS TOTALMENTE VAZIAS
+# 47. REMOVENDO COLUNAS TOTALMENTE VAZIAS
 # =========================================================
 
 colunas_exibir = []
@@ -909,7 +1099,7 @@ df_exibicao = df_exibicao[colunas_exibir]
 
 
 # =========================================================
-# EXIBIR TABELA
+# 48. EXIBINDO A TABELA
 # =========================================================
 
 if not df_exibicao.empty:
@@ -922,7 +1112,7 @@ else:
 
 
 # =========================================================
-# 32. DOWNLOAD
+# 49. DOWNLOAD DOS DADOS FILTRADOS
 # =========================================================
 
 csv = df_exibicao.to_csv(index=False).encode("utf-8-sig")
@@ -937,23 +1127,29 @@ st.download_button(
 
 
 # =========================================================
-# 33. INFORMACOES
+# 50. INFORMACOES DA BASE
 # =========================================================
 
 with st.expander("ℹ️ Informações da Base"):
 
-    st.write(f"Total de registros carregados: {len(base)}")
+    st.write(f"Registros carregados: {len(base)}")
 
     st.write(
-        f"Técnicos cadastrados: "
+        "Técnicos cadastrados: "
         f"{base.loc[base['Recurso'] != '', 'Recurso'].nunique()}"
     )
 
     st.write(f"Registros após filtros: {len(df)}")
 
+    if not datas_validas.empty:
+
+        st.write("Primeira data disponível: " f"{data_minima.strftime('%d/%m/%Y')}")
+
+        st.write("Última data disponível: " f"{data_maxima.strftime('%d/%m/%Y')}")
+
 
 # =========================================================
-# 34. RODAPE
+# 51. RODAPE
 # =========================================================
 
 st.divider()
