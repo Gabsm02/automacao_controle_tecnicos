@@ -1,6 +1,5 @@
 import pandas as pd
 import os
-from datetime import datetime
 
 # ==========================================
 # 1. CONFIGURACOES DOS ARQUIVOS
@@ -22,14 +21,15 @@ base_eta = pd.read_excel(arquivo_eta, sheet_name="Page 1")
 
 
 # ==========================================
-# 3. SELECIONANDO AS COLUNAS NECESSARIAS
+# 3. SELECIONANDO AS COLUNAS
 # ==========================================
 
-base_toa = base_toa[["Recurso", "Tipo", "Status da Atividade", "Data"]]
+base_toa = base_toa[["Recurso", "Tipo", "Status da Atividade", "Data"]].copy()
+
 
 base_eta = base_eta[
     ["Recurso", "Status", "Tipo de Atividade", "Data Agendada para Execução"]
-]
+].copy()
 
 
 # ==========================================
@@ -40,6 +40,7 @@ base_toa = base_toa.rename(
     columns={"Status da Atividade": "Status", "Data": "Data Concluída"}
 )
 
+
 base_eta = base_eta.rename(
     columns={
         "Tipo de Atividade": "Tipo",
@@ -49,79 +50,125 @@ base_eta = base_eta.rename(
 
 
 # ==========================================
-# 5. DESCOBRINDO O DIA DA SEMANA
+# 5. TRATANDO AS DATAS
+# ==========================================
+
+base_toa["Data Concluída"] = pd.to_datetime(
+    base_toa["Data Concluída"], errors="coerce", dayfirst=True
+)
+
+
+base_eta["Data Concluída"] = pd.to_datetime(
+    base_eta["Data Concluída"], errors="coerce", dayfirst=True
+)
+
+
+# ==========================================
+# 6. CALCULANDO O DIA DA SEMANA
 # ==========================================
 
 dias_semana = {
-    "Monday": "seg",
-    "Tuesday": "ter",
-    "Wednesday": "qua",
-    "Thursday": "qui",
-    "Friday": "sex",
-    "Saturday": "sáb",
-    "Sunday": "dom",
+    0: "seg",
+    1: "ter",
+    2: "qua",
+    3: "qui",
+    4: "sex",
+    5: "sáb",
+    6: "dom",
 }
 
-dia_semana = dias_semana[datetime.now().strftime("%A")]
+
+base_toa["Dia Semana"] = base_toa["Data Concluída"].dt.dayofweek.map(dias_semana)
+
+
+base_eta["Dia Semana"] = base_eta["Data Concluída"].dt.dayofweek.map(dias_semana)
 
 
 # ==========================================
-# 6. ADICIONANDO ORIGEM E DIA DA SEMANA
+# 7. ADICIONANDO A ORIGEM
 # ==========================================
 
-# Base TOA
 base_toa["Origem"] = "TOA"
-base_toa["Dia Semana"] = dia_semana
 
-# Base ETA
 base_eta["Origem"] = "ETA"
-base_eta["Dia Semana"] = dia_semana
 
 
 # ==========================================
-# 7. JUNTANDO TOA + ETA
+# 8. ORGANIZANDO A ORDEM DAS COLUNAS
+# ==========================================
+
+ordem_colunas = ["Recurso", "Tipo", "Status", "Data Concluída", "Origem", "Dia Semana"]
+
+
+base_toa = base_toa[ordem_colunas]
+
+
+base_eta = base_eta[ordem_colunas]
+
+
+# ==========================================
+# 9. JUNTANDO TOA + ETA
 # ==========================================
 
 base_nova = pd.concat([base_toa, base_eta], ignore_index=True)
 
 
 # ==========================================
-# 8. VERIFICANDO SE BASE_FINAL JA EXISTE
+# 10. VERIFICANDO SE BASE_FINAL JA EXISTE
 # ==========================================
 
 if os.path.exists(arquivo_final):
 
     print("Base_Final encontrada.")
 
-    # Lendo registros antigos
     base_antiga = pd.read_excel(arquivo_final)
 
-    # Remove as colunas vindas da referencia
-    # para atualiza-las novamente
+    # Remove as colunas da base de referencia
+    # pois serao preenchidas novamente
     base_antiga = base_antiga.drop(
         columns=["COORD", "Supervisor", "CLASSIFICACAO"], errors="ignore"
     )
 
-    # Junta registros antigos + novos
+    # ======================================
+    # CORRIGINDO DATA DA BASE ANTIGA
+    # ======================================
+
+    if "Data Concluída" in base_antiga.columns:
+
+        base_antiga["Data Concluída"] = pd.to_datetime(
+            base_antiga["Data Concluída"], errors="coerce", dayfirst=True
+        )
+
+        # Recalcula o dia da semana
+        # usando a data real de cada registro
+        base_antiga["Dia Semana"] = base_antiga["Data Concluída"].dt.dayofweek.map(
+            dias_semana
+        )
+
+    # ======================================
+    # JUNTANDO ANTIGOS + NOVOS
+    # ======================================
+
     base_final = pd.concat([base_antiga, base_nova], ignore_index=True)
+
 
 else:
 
-    print("Base_Final ainda nao existe.")
+    print("Base_Final ainda não existe.")
     print("Criando uma nova Base_Final...")
 
     base_final = base_nova.copy()
 
 
 # ==========================================
-# 9. LENDO A BASE DE REFERENCIA
+# 11. LENDO A BASE DE REFERENCIA
 # ==========================================
 
 base_referencia = pd.read_excel(arquivo_referencia, sheet_name="tbDEPARA")
 
 
 # ==========================================
-# 10. SELECIONANDO AS COLUNAS DO DEPARA
+# 12. SELECIONANDO AS COLUNAS DO DEPARA
 # ==========================================
 
 base_referencia = base_referencia[
@@ -130,68 +177,75 @@ base_referencia = base_referencia[
 
 
 # ==========================================
-# 11. RENOMEANDO NOME PARA RECURSO
+# 13. RENOMEANDO NOME PARA RECURSO
 # ==========================================
 
-# Na tbDEPARA, "Nome" corresponde ao
-# "Recurso" das bases TOA e ETA
+# Na tbDEPARA:
+# Nome = Recurso das bases TOA e ETA
 
 base_referencia = base_referencia.rename(columns={"Nome": "Recurso"})
 
 
 # ==========================================
-# 12. TRATANDO A COLUNA RECURSO
+# 14. TRATANDO A COLUNA RECURSO
 # ==========================================
 
-# Converte tudo para texto
-# Remove espacos antes/depois
-# Converte para maiusculo para facilitar a comparacao
+base_final["Recurso"] = (
+    base_final["Recurso"].fillna("").astype(str).str.strip().str.upper()
+)
 
-base_final["Recurso"] = base_final["Recurso"].astype(str).str.strip().str.upper()
 
 base_referencia["Recurso"] = (
-    base_referencia["Recurso"].astype(str).str.strip().str.upper()
+    base_referencia["Recurso"].fillna("").astype(str).str.strip().str.upper()
 )
 
 
 # ==========================================
-# 13. REMOVENDO DUPLICADOS DO DEPARA
+# 15. REMOVENDO RECURSOS VAZIOS DO DEPARA
 # ==========================================
 
-# Se o mesmo Nome/Recurso aparecer mais de uma
-# vez na tbDEPARA, sera mantido o ultimo registro.
+base_referencia = base_referencia[base_referencia["Recurso"] != ""]
+
+
+# ==========================================
+# 16. REMOVENDO DUPLICADOS DO DEPARA
+# ==========================================
 
 base_referencia = base_referencia.drop_duplicates(subset=["Recurso"], keep="last")
 
 
 # ==========================================
-# 14. BUSCANDO COORD, SUPERVISOR E CLASSIFICACAO
+# 17. BUSCANDO INFORMACOES NA tbDEPARA
 # ==========================================
 
 base_final = base_final.merge(base_referencia, on="Recurso", how="left")
 
 
 # ==========================================
-# 15. ORGANIZANDO AS COLUNAS
+# 18. ORGANIZANDO AS COLUNAS FINAIS
 # ==========================================
 
-# Essas colunas sempre ficarao no final
-
 colunas_finais = ["COORD", "Supervisor", "CLASSIFICACAO"]
+
 
 outras_colunas = [
     coluna for coluna in base_final.columns if coluna not in colunas_finais
 ]
 
+
 base_final = base_final[outras_colunas + colunas_finais]
 
 
 # ==========================================
-# 16. VERIFICANDO RECURSOS NAO ENCONTRADOS
+# 19. VERIFICANDO RECURSOS NAO ENCONTRADOS
 # ==========================================
 
 recursos_nao_encontrados = (
-    base_final[base_final["COORD"].isna()]["Recurso"].dropna().unique()
+    base_final.loc[
+        base_final["COORD"].isna() & (base_final["Recurso"] != ""), "Recurso"
+    ]
+    .drop_duplicates()
+    .tolist()
 )
 
 
@@ -199,53 +253,118 @@ quantidade_nao_encontrados = len(recursos_nao_encontrados)
 
 
 # ==========================================
-# 17. SALVANDO A BASE FINAL
+# 20. GARANTINDO QUE DATA CONTINUE COMO DATA
 # ==========================================
 
-base_final.to_excel(arquivo_final, index=False)
+base_final["Data Concluída"] = pd.to_datetime(
+    base_final["Data Concluída"], errors="coerce", dayfirst=True
+)
 
 
 # ==========================================
-# 18. RESULTADO
+# 21. SALVANDO A BASE FINAL
+# ==========================================
+
+with pd.ExcelWriter(
+    arquivo_final,
+    engine="openpyxl",
+    date_format="DD/MM/YYYY",
+    datetime_format="DD/MM/YYYY",
+) as writer:
+
+    # Salva os dados
+    base_final.to_excel(writer, index=False, sheet_name="Base")
+
+    # Acessa a aba criada
+    planilha = writer.sheets["Base"]
+
+    # ======================================
+    # DESCOBRINDO A COLUNA DA DATA
+    # ======================================
+
+    coluna_data = base_final.columns.get_loc("Data Concluída") + 1
+
+    # ======================================
+    # FORMATANDO AS DATAS NO EXCEL
+    # ======================================
+
+    for linha in range(2, len(base_final) + 2):
+
+        celula = planilha.cell(row=linha, column=coluna_data)
+
+        celula.number_format = "DD/MM/YYYY"
+
+
+# ==========================================
+# 22. RESULTADO
 # ==========================================
 
 print()
+
 print("=" * 60)
+
 print("BASE ATUALIZADA COM SUCESSO!")
+
 print("=" * 60)
 
-print(f"Dia da semana: {dia_semana}")
 
 print()
+
 print("REGISTROS ADICIONADOS")
+
 print("-" * 60)
+
 
 print(f"TOA: {len(base_toa)}")
+
+
 print(f"ETA: {len(base_eta)}")
+
+
 print(f"Total novos: {len(base_nova)}")
 
+
 print()
+
 print("BASE FINAL")
+
 print("-" * 60)
+
 
 print(f"Total de registros: {len(base_final)}")
 
+
 print()
+
 print("DEPARA")
+
 print("-" * 60)
 
-print(f"Recursos nao encontrados: " f"{quantidade_nao_encontrados}")
 
-# Mostra quais recursos nao foram encontrados
+print(f"Recursos não encontrados: " f"{quantidade_nao_encontrados}")
+
+
+# ==========================================
+# 23. MOSTRANDO RECURSOS NAO ENCONTRADOS
+# ==========================================
+
 if quantidade_nao_encontrados > 0:
 
     print()
-    print("Recursos que nao existem na tbDEPARA:")
+
+    print("Recursos que não existem na tbDEPARA:")
 
     for recurso in recursos_nao_encontrados:
+
         print(f"- {recurso}")
 
+
 print()
+
 print("=" * 60)
+
 print(f"Arquivo salvo: {arquivo_final}")
+
+print("Formato das datas: DD/MM/AAAA")
+
 print("=" * 60)
