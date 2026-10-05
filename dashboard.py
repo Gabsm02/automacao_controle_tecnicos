@@ -255,7 +255,7 @@ origem = st.sidebar.multiselect(
 # =========================================================
 
 coord = st.sidebar.multiselect(
-    "COORD", lista_coord, default=[], placeholder="Todos os coordenadores"
+    "Coordenador", lista_coord, default=[], placeholder="Todos os coordenadores"
 )
 
 
