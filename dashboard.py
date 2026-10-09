@@ -196,13 +196,14 @@ def normalizar_nome(texto):
     if pd.isna(texto):
         return ""
 
-    texto = str(texto).upper()
+    texto = str(texto).strip().upper()
+
     texto = "".join(
         c
         for c in unicodedata.normalize("NFD", texto)
         if unicodedata.category(c) != "Mn"
     )
-    texto = " ".join(texto.split())
+
     return texto
 
 
@@ -220,14 +221,7 @@ forca_trabalho["Dias Trabalhados"] = (
     .sum(axis=1)
 )
 
-dias_trabalhados = (
-    forca_trabalho.loc[
-        forca_trabalho["CHAVE"] != "",
-        ["CHAVE", "Dias Trabalhados"],
-    ]
-    .groupby("CHAVE", as_index=False)["Dias Trabalhados"]
-    .max()
-)
+dias_trabalhados = forca_trabalho[["CHAVE", "Dias Trabalhados"]].copy()
 
 
 # =========================================================
@@ -1069,23 +1063,41 @@ if not df_produtividade.empty:
     # =====================================================
 
     st.divider()
-
     st.subheader("📈 Média Produtiva por Técnico")
 
     st.caption(
-        "Selecione um coordenador para visualizar a média "
-        "produtiva dos técnicos vinculados a ele. A média é "
-        "calculada dividindo o total de atividades executadas pela "
-        "quantidade de dias em que o colaborador esteve ATIVO na "
-        "base de força de trabalho."
+        "Selecione um coordenador para visualizar a média produtiva dos técnicos "
+        "vinculados a ele. A média considera somente colaboradores presentes "
+        "na Base_Final e na base de força de trabalho, dividindo o total de "
+        "atividades pelos dias com status ATIVO."
     )
 
     # =====================================================
-    # COORDENADORES DISPONIVEIS PARA MEDIA
+    # INTERSECAO: BASE FINAL X FORCA DE TRABALHO
     # =====================================================
 
-    coordenadores_media = (
-        df_produtividade.loc[df_produtividade["COORD"] != "", "COORD"]
+    chaves_forca = set(
+        forca_trabalho.loc[forca_trabalho["CHAVE"] != "", "CHAVE"]
+        .dropna()
+        .astype(str)
+        .tolist()
+    )
+
+    df_produtividade_media = df_produtividade.copy()
+    df_produtividade_media["CHAVE"] = (
+        df_produtividade_media["Recurso"].apply(normalizar_nome)
+    )
+
+    # Só permanecem colaboradores existentes nas duas bases.
+    df_produtividade_media = df_produtividade_media[
+        df_produtividade_media["CHAVE"].isin(chaves_forca)
+    ].copy()
+
+    # A lista de coordenadores nasce da interseção acima.
+    coordenadores_media = sorted(
+        df_produtividade_media.loc[
+            df_produtividade_media["COORD"] != "", "COORD"
+        ]
         .dropna()
         .astype(str)
         .str.strip()
@@ -1093,179 +1105,151 @@ if not df_produtividade.empty:
         .tolist()
     )
 
-    coordenadores_media = sorted(coordenadores_media)
-
-    # =====================================================
-    # FILTRO LOCAL DA MEDIA PRODUTIVA
-    # =====================================================
-
-    coordenador_media = st.selectbox(
-        "🔎 Coordenador",
-        options=coordenadores_media,
-        index=None,
-        placeholder="Selecione um coordenador...",
-        key="coordenador_media",
-    )
-
-    # =====================================================
-    # SOMENTE MOSTRA A MEDIA DEPOIS DA SELECAO
-    # =====================================================
-
-    if coordenador_media:
-
-        df_media = df_produtividade[
-            df_produtividade["COORD"] == coordenador_media
-        ].copy()
-
-        # =================================================
-        # TOTAL DE ATIVIDADES POR TECNICO
-        # =================================================
-
-        total_por_tecnico = (
-            df_media.groupby("Recurso").size().reset_index(name="Total Atividades")
-        )
-
-        total_por_tecnico["CHAVE"] = total_por_tecnico["Recurso"].apply(normalizar_nome)
-
-        # =================================================
-        # CRUZAMENTO COM A BASE PRODUCAO
-        # =================================================
-
-        media_produtiva = total_por_tecnico.merge(
-            dias_trabalhados,
-            on="CHAVE",
-            how="inner",
-        )
-
-        # Ignora quem não está na PRODUÇÃO ou não possui dia ATIVO.
-        media_produtiva = media_produtiva[
-            media_produtiva["Dias Trabalhados"] > 0
-        ].copy()
-
-        # =================================================
-        # CALCULANDO A MEDIA
-        # =================================================
-
-        media_produtiva["Média Diária"] = (
-            media_produtiva["Total Atividades"] / media_produtiva["Dias Trabalhados"]
-        ).round(2)
-
-        media_produtiva = media_produtiva.sort_values(
-            ["Média Diária", "Total Atividades"],
-            ascending=[False, False],
-        )
-
-        # =================================================
-        # INDICADORES DA MEDIA
-        # =================================================
-
-        media_geral = media_produtiva["Média Diária"].mean()
-
-        maior_media = media_produtiva["Média Diária"].max()
-
-        tecnico_maior_media = media_produtiva.iloc[0]["Recurso"]
-
-        quantidade_tecnicos_media = media_produtiva["Recurso"].nunique()
-
-        media1, media2, media3 = st.columns(3)
-
-        with media1:
-
-            st.metric("📊 Média Geral", f"{media_geral:.2f}")
-
-        with media2:
-
-            st.metric("🏅 Maior Média", f"{maior_media:.2f}")
-
-        with media3:
-
-            st.metric("👷 Técnicos Analisados", quantidade_tecnicos_media)
-
+    if not coordenadores_media:
         st.info(
-            f"Maior média produtiva de "
-            f"{coordenador_media}: "
-            f"{tecnico_maior_media} "
-            f"com {maior_media:.2f} atividades/dia."
+            "Nenhum coordenador possui colaboradores presentes simultaneamente "
+            "na Base_Final e na base de força de trabalho."
         )
-
-        # =================================================
-        # GRAFICO DA MEDIA PRODUTIVA
-        # =================================================
-
-        media_grafico = media_produtiva.sort_values("Média Diária", ascending=True)
-
-        fig_media = px.bar(
-            media_grafico,
-            x="Média Diária",
-            y="Recurso",
-            orientation="h",
-            text="Média Diária",
-            color="Média Diária",
-            color_continuous_scale=ESCALA_VIVO,
-            custom_data=["Total Atividades", "Dias Trabalhados"],
-            labels={
-                "Recurso": "Técnico",
-                "Média Diária": "Média de Atividades por Dia",
-            },
-        )
-
-        fig_media.update_traces(
-            textposition="outside",
-            texttemplate="%{text:.2f}",
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "Média diária: %{x:.2f}<br>"
-                "Total de atividades: "
-                "%{customdata[0]}<br>"
-                "Dias trabalhados "
-                "%{customdata[1]}"
-                "<extra></extra>"
-            ),
-        )
-
-        # =================================================
-        # ALTURA DINAMICA
-        # =================================================
-
-        altura_media = max(400, len(media_grafico) * 45)
-
-        fig_media.update_layout(
-            height=altura_media,
-            coloraxis_showscale=False,
-            xaxis_title=("Média de Atividades por Dia"),
-            yaxis_title="Técnico",
-        )
-
-        st.plotly_chart(fig_media, use_container_width=True)
-
-        # =================================================
-        # RESUMO DE PRODUTIVIDADE
-        # =================================================
-
-        st.markdown("### 📋 Resumo de Produtividade")
-
-        st.caption(
-            f"Resumo dos técnicos vinculados ao coordenador " f"{coordenador_media}."
-        )
-
-        tabela_media = media_produtiva.rename(
-            columns={"Recurso": "Técnico"}
-        ).reset_index(drop=True)
-
-        st.dataframe(tabela_media, use_container_width=True, hide_index=True)
-
     else:
-
-        st.info(
-            "👆 Selecione um coordenador para visualizar "
-            "a média produtiva dos técnicos."
+        coordenador_media = st.selectbox(
+            "🔎 Coordenador",
+            options=coordenadores_media,
+            index=None,
+            placeholder="Selecione um coordenador...",
+            key="coordenador_media",
         )
 
+        if coordenador_media:
+            df_media = df_produtividade_media[
+                df_produtividade_media["COORD"] == coordenador_media
+            ].copy()
+
+            total_por_tecnico = (
+                df_media.groupby(["Recurso", "CHAVE"])
+                .size()
+                .reset_index(name="Total Atividades")
+            )
+
+            # Inner: ignora colaboradores que não estejam na força de trabalho.
+            media_produtiva = total_por_tecnico.merge(
+                dias_trabalhados,
+                on="CHAVE",
+                how="inner",
+            )
+
+            # Sem dias ATIVO, o colaborador não entra na média.
+            media_produtiva = media_produtiva[
+                media_produtiva["Dias Trabalhados"] > 0
+            ].copy()
+
+            if media_produtiva.empty:
+                st.info(
+                    "Nenhum colaborador do coordenador selecionado possui dias "
+                    "com status ATIVO na base de força de trabalho."
+                )
+            else:
+                media_produtiva["Média Diária"] = (
+                    media_produtiva["Total Atividades"]
+                    / media_produtiva["Dias Trabalhados"]
+                ).round(2)
+
+                media_produtiva = (
+                    media_produtiva.drop(columns=["CHAVE"], errors="ignore")
+                    .sort_values(
+                        ["Média Diária", "Total Atividades"],
+                        ascending=[False, False],
+                    )
+                    .reset_index(drop=True)
+                )
+
+                media_geral = media_produtiva["Média Diária"].mean()
+                maior_media = media_produtiva["Média Diária"].max()
+                tecnico_maior_media = media_produtiva.iloc[0]["Recurso"]
+                quantidade_tecnicos_media = media_produtiva["Recurso"].nunique()
+
+                media1, media2, media3 = st.columns(3)
+                with media1:
+                    st.metric("📊 Média Geral", f"{media_geral:.2f}")
+                with media2:
+                    st.metric("🏅 Maior Média", f"{maior_media:.2f}")
+                with media3:
+                    st.metric("👷 Técnicos Analisados", quantidade_tecnicos_media)
+
+                st.info(
+                    f"Maior média produtiva de {coordenador_media}: "
+                    f"{tecnico_maior_media} com {maior_media:.2f} "
+                    "atividades por dia trabalhado."
+                )
+
+                media_grafico = media_produtiva.sort_values(
+                    "Média Diária", ascending=True
+                )
+
+                fig_media = px.bar(
+                    media_grafico,
+                    x="Média Diária",
+                    y="Recurso",
+                    orientation="h",
+                    text="Média Diária",
+                    color="Média Diária",
+                    color_continuous_scale=ESCALA_VIVO,
+                    custom_data=["Total Atividades", "Dias Trabalhados"],
+                    labels={
+                        "Recurso": "Técnico",
+                        "Média Diária": "Média de Atividades por Dia Trabalhado",
+                    },
+                )
+
+                fig_media.update_traces(
+                    textposition="outside",
+                    texttemplate="%{text:.2f}",
+                    hovertemplate=(
+                        "<b>%{y}</b><br>"
+                        "Média diária: %{x:.2f}<br>"
+                        "Total de atividades: %{customdata[0]}<br>"
+                        "Dias trabalhados: %{customdata[1]}"
+                        "<extra></extra>"
+                    ),
+                )
+
+                altura_media = max(400, len(media_grafico) * 45)
+                fig_media.update_layout(
+                    height=altura_media,
+                    coloraxis_showscale=False,
+                    xaxis_title="Média de Atividades por Dia Trabalhado",
+                    yaxis_title="Técnico",
+                )
+                st.plotly_chart(fig_media, use_container_width=True)
+
+                st.markdown("### 📋 Resumo de Produtividade")
+                st.caption(
+                    f"Resumo dos técnicos de {coordenador_media} presentes "
+                    "nas duas bases."
+                )
+
+                tabela_media = media_produtiva.rename(
+                    columns={"Recurso": "Técnico"}
+                ).reset_index(drop=True)
+
+                st.dataframe(
+                    tabela_media[
+                        [
+                            "Técnico",
+                            "Total Atividades",
+                            "Dias Trabalhados",
+                            "Média Diária",
+                        ]
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+        else:
+            st.info(
+                "👆 Selecione um coordenador para visualizar a média produtiva."
+            )
 
 else:
-
-    st.info("Não existem atividades com data " "para calcular a produtividade.")
-
+    st.info("Não existem atividades com data para calcular a produtividade.")
 
 # =========================================================
 # 41. DETALHAMENTO OPERACIONAL
