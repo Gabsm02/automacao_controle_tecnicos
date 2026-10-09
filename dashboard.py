@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import unicodedata
 
 # =========================================================
 # 1. PALETA DE CORES
@@ -173,6 +174,60 @@ except Exception as erro:
     st.error(f"Erro ao carregar a base: {erro}")
 
     st.stop()
+
+
+@st.cache_data
+def carregar_forca_trabalho():
+
+    df = pd.read_excel(
+        "PRODUÇÃO B2B-OUTUBRO.xlsx",
+        sheet_name="FORÇA DE TRABALHO",
+        header=13,
+        engine="openpyxl",
+    )
+
+    df.columns = df.columns.astype(str).str.strip()
+
+    return df
+
+
+def normalizar_nome(texto):
+
+    if pd.isna(texto):
+        return ""
+
+    texto = str(texto).upper()
+    texto = "".join(
+        c
+        for c in unicodedata.normalize("NFD", texto)
+        if unicodedata.category(c) != "Mn"
+    )
+    texto = " ".join(texto.split())
+    return texto
+
+
+forca_trabalho = carregar_forca_trabalho()
+
+forca_trabalho["CHAVE"] = forca_trabalho["Nome"].apply(normalizar_nome)
+
+colunas_datas = [coluna for coluna in forca_trabalho.columns if "/" in str(coluna)]
+
+forca_trabalho["Dias Trabalhados"] = (
+    forca_trabalho[colunas_datas]
+    .astype(str)
+    .apply(lambda coluna: coluna.str.upper().str.strip())
+    .eq("ATIVO")
+    .sum(axis=1)
+)
+
+dias_trabalhados = (
+    forca_trabalho.loc[
+        forca_trabalho["CHAVE"] != "",
+        ["CHAVE", "Dias Trabalhados"],
+    ]
+    .groupby("CHAVE", as_index=False)["Dias Trabalhados"]
+    .max()
+)
 
 
 # =========================================================
@@ -1020,9 +1075,9 @@ if not df_produtividade.empty:
     st.caption(
         "Selecione um coordenador para visualizar a média "
         "produtiva dos técnicos vinculados a ele. A média é "
-        "calculada dividindo o total de atividades pela "
-        "quantidade de dias em que o técnico teve pelo menos "
-        "uma atividade."
+        "calculada dividindo o total de atividades executadas pela "
+        "quantidade de dias em que o colaborador esteve ATIVO na "
+        "base de força de trabalho."
     )
 
     # =====================================================
@@ -1070,36 +1125,34 @@ if not df_produtividade.empty:
             df_media.groupby("Recurso").size().reset_index(name="Total Atividades")
         )
 
-        # =================================================
-        # QUANTIDADE DE DIAS COM ATIVIDADE
-        # =================================================
-
-        dias_por_tecnico = (
-            df_media.groupby("Recurso")["Data"]
-            .nunique()
-            .reset_index(name="Dias com Atividade")
-        )
+        total_por_tecnico["CHAVE"] = total_por_tecnico["Recurso"].apply(normalizar_nome)
 
         # =================================================
-        # JUNTANDO RESULTADOS
+        # CRUZAMENTO COM A BASE PRODUCAO
         # =================================================
 
         media_produtiva = total_por_tecnico.merge(
-            dias_por_tecnico, on="Recurso", how="left"
+            dias_trabalhados,
+            on="CHAVE",
+            how="inner",
         )
+
+        # Ignora quem não está na PRODUÇÃO ou não possui dia ATIVO.
+        media_produtiva = media_produtiva[
+            media_produtiva["Dias Trabalhados"] > 0
+        ].copy()
 
         # =================================================
         # CALCULANDO A MEDIA
         # =================================================
 
         media_produtiva["Média Diária"] = (
-            media_produtiva["Total Atividades"] / media_produtiva["Dias com Atividade"]
-        )
-
-        media_produtiva["Média Diária"] = media_produtiva["Média Diária"].round(2)
+            media_produtiva["Total Atividades"] / media_produtiva["Dias Trabalhados"]
+        ).round(2)
 
         media_produtiva = media_produtiva.sort_values(
-            ["Média Diária", "Total Atividades"], ascending=[False, False]
+            ["Média Diária", "Total Atividades"],
+            ascending=[False, False],
         )
 
         # =================================================
@@ -1149,7 +1202,7 @@ if not df_produtividade.empty:
             text="Média Diária",
             color="Média Diária",
             color_continuous_scale=ESCALA_VIVO,
-            custom_data=["Total Atividades", "Dias com Atividade"],
+            custom_data=["Total Atividades", "Dias Trabalhados"],
             labels={
                 "Recurso": "Técnico",
                 "Média Diária": "Média de Atividades por Dia",
@@ -1164,7 +1217,7 @@ if not df_produtividade.empty:
                 "Média diária: %{x:.2f}<br>"
                 "Total de atividades: "
                 "%{customdata[0]}<br>"
-                "Dias com atividade: "
+                "Dias trabalhados "
                 "%{customdata[1]}"
                 "<extra></extra>"
             ),
