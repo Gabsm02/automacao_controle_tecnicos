@@ -1,0 +1,4361 @@
+@layout('main')
+
+@section('content')
+
+<style>
+  :root {
+    --baseline-primary: #660099;
+    --baseline-primary-dark: #4d0075;
+    --baseline-pink: #cb2166;
+    --baseline-blue: #0066ff;
+    --baseline-orange: #ff9200;
+    --baseline-green: #28a745;
+    --baseline-yellow: #ffb703;
+    --baseline-red: #dc3545;
+    --baseline-gray-100: #f8f9fa;
+    --baseline-gray-200: #e9ecef;
+    --baseline-gray-600: #6c757d;
+    --baseline-gray-800: #343a40;
+    --baseline-white: #ffffff;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  /* ============================================================
+     CABEÇALHO
+  ============================================================ */
+
+  .baseline-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem 2rem;
+    color: #ffffff;
+    border-radius: 12px;
+    background:
+      linear-gradient(
+        135deg,
+        var(--baseline-primary) 0%,
+        var(--baseline-pink) 100%
+      );
+    box-shadow:
+      0 4px 15px rgba(102, 0, 153, 0.25);
+  }
+
+  .baseline-page-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .baseline-page-header h1 {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .baseline-page-header .subtitle {
+    margin-top: 0.25rem;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.9rem;
+  }
+
+  .baseline-page-header-period {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 0.9rem;
+    color: var(--baseline-primary);
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    box-shadow:
+      0 4px 12px rgba(33, 0, 50, 0.18);
+  }
+
+  /* ============================================================
+     TÍTULOS DE SEÇÃO
+  ============================================================ */
+
+  .baseline-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 0 0 0.85rem;
+  }
+
+  .baseline-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    color: var(--baseline-primary);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .baseline-section-description {
+    color: var(--baseline-gray-600);
+    font-size: 0.78rem;
+  }
+
+  /* ============================================================
+     FILTROS
+  ============================================================ */
+
+  .baseline-filter-panel {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .baseline-filter-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--baseline-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .baseline-filter-grid {
+    display: grid;
+    grid-template-columns:
+      minmax(210px, 2fr)
+      repeat(5, minmax(130px, 1fr))
+      auto;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .baseline-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .baseline-filter-group label {
+    margin: 0;
+    color: var(--baseline-gray-600);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .baseline-filter-group .form-control {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid #d9d0df;
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-size: 0.82rem;
+  }
+
+  .baseline-filter-group .form-control:focus {
+    border-color: var(--baseline-primary);
+    box-shadow:
+      0 0 0 0.2rem rgba(102, 0, 153, 0.12);
+  }
+
+  .baseline-filter-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .baseline-btn-search,
+  .baseline-btn-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 38px;
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .baseline-btn-search {
+    color: #ffffff;
+    border: 1px solid var(--baseline-primary);
+    background: var(--baseline-primary);
+  }
+
+  .baseline-btn-search:hover {
+    color: #ffffff;
+    border-color: var(--baseline-pink);
+    background: var(--baseline-pink);
+    transform: translateY(-1px);
+  }
+
+  .baseline-btn-clear {
+    color: var(--baseline-primary);
+    border: 1px solid #d7c8df;
+    background: #ffffff;
+    text-decoration: none;
+  }
+
+  .baseline-btn-clear:hover {
+    color: var(--baseline-primary);
+    background: #f8f3fb;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  /* ============================================================
+     KPIs
+  ============================================================ */
+
+  .baseline-kpi-grid {
+    display: grid;
+    grid-template-columns:
+      repeat(auto-fit, minmax(175px, 1fr));
+    gap: 16px;
+    margin-bottom: 1.5rem;
+  }
+
+  .baseline-kpi-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 118px;
+    padding: 18px;
+    border-left: 4px solid var(--baseline-primary);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow:
+      0 2px 8px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .baseline-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.13);
+  }
+
+  .baseline-kpi-card::after {
+    position: absolute;
+    right: -22px;
+    bottom: -30px;
+    width: 84px;
+    height: 84px;
+    content: "";
+    border-radius: 50%;
+    background: rgba(102, 0, 153, 0.05);
+  }
+
+  .baseline-kpi-card.primary {
+    border-left-color: var(--baseline-primary);
+  }
+
+  .baseline-kpi-card.pink {
+    border-left-color: var(--baseline-pink);
+  }
+
+  .baseline-kpi-card.blue {
+    border-left-color: var(--baseline-blue);
+  }
+
+  .baseline-kpi-card.orange {
+    border-left-color: var(--baseline-orange);
+  }
+
+  .baseline-kpi-card.success {
+    border-left-color: var(--baseline-green);
+  }
+
+  .baseline-kpi-card.warning {
+    border-left-color: var(--baseline-yellow);
+  }
+
+  .baseline-kpi-card.danger {
+    border-left-color: var(--baseline-red);
+  }
+
+  .baseline-kpi-card.highlight {
+    color: #ffffff;
+    border-left: 0;
+    background:
+      linear-gradient(
+        135deg,
+        var(--baseline-primary) 0%,
+        var(--baseline-pink) 100%
+      );
+  }
+
+  .baseline-kpi-card.highlight::after {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .baseline-kpi-label {
+    position: relative;
+    z-index: 1;
+    display: block;
+    min-height: 30px;
+    color: var(--baseline-gray-600);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+  }
+
+  .baseline-kpi-card.highlight .baseline-kpi-label {
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .baseline-kpi-value {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 8px;
+    color: var(--baseline-primary);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .baseline-kpi-card.highlight .baseline-kpi-value {
+    color: #ffffff;
+  }
+
+  .baseline-kpi-value small {
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.78;
+  }
+
+  .baseline-status-dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    flex: 0 0 11px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 4px rgba(0, 0, 0, 0.05);
+  }
+
+/* ============================================================
+   LAYOUT EXECUTIVO DOS GRÁFICOS
+============================================================ */
+
+.baseline-panel {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.baseline-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 74px;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--baseline-gray-200);
+  background: var(--baseline-gray-100);
+}
+
+.baseline-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--baseline-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.baseline-panel-subtitle {
+  margin-top: 0.2rem;
+  color: var(--baseline-gray-600);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   EVOLUÇÃO MENSAL EM TODA A LARGURA
+============================================================ */
+
+.baseline-evolution-panel {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.baseline-chart-wrapper-evolution {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  padding: 20px;
+}
+
+/* ============================================================
+   TRÊS GRÁFICOS COMPARATIVOS LADO A LADO
+============================================================ */
+
+.baseline-comparative-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.baseline-comparative-grid > .baseline-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+}
+
+.baseline-comparative-grid .baseline-panel-header {
+  flex: 0 0 auto;
+}
+
+.baseline-chart-wrapper-comparative {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 400px;
+  min-height: 400px;
+  padding: 18px;
+}
+
+/* ============================================================
+   TABELAS DE RANKING COM LARGURAS IGUAIS
+============================================================ */
+
+.baseline-ranking-tables-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.baseline-ranking-tables-grid > .baseline-panel {
+  width: 100%;
+  min-width: 0;
+}
+
+.baseline-ranking-tables-grid .baseline-table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/*
+ * A tabela de DDD possui mais colunas.
+ * Ela continua com rolagem horizontal dentro do próprio painel,
+ * sem aumentar a largura do painel.
+ */
+.baseline-ranking-tables-grid .baseline-table {
+  width: 100%;
+}
+
+/* ============================================================
+   GRÁFICOS DE CAUSAS OFENSORAS
+============================================================ */
+
+.baseline-cause-charts-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.5fr)
+    minmax(280px, 0.75fr)
+    minmax(280px, 0.75fr);
+  gap: 1.25rem;
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.baseline-cause-charts-grid > .baseline-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.baseline-chart-wrapper-ranking {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  padding: 20px;
+}
+
+.baseline-chart-wrapper-small {
+  position: relative;
+  width: 100%;
+  height: 340px;
+  padding: 20px;
+}
+
+.baseline-chart-legend-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  color: var(--baseline-gray-600);
+  font-size: 0.7rem;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+============================================================ */
+
+/*
+ * Mantém os três gráficos comparativos lado a lado
+ * em computadores e notebooks.
+ */
+@media (min-width: 992px) {
+  .baseline-comparative-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .baseline-comparative-grid > .baseline-panel {
+    grid-column: auto;
+  }
+
+  .baseline-ranking-tables-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+/*
+ * Em tablets, os gráficos e tabelas ficam um abaixo do outro.
+ * Isso evita painéis apertados e textos ilegíveis.
+ */
+@media (max-width: 991.98px) {
+  .baseline-comparative-grid,
+  .baseline-ranking-tables-grid,
+  .baseline-cause-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .baseline-comparative-grid > .baseline-panel,
+  .baseline-cause-charts-grid > .baseline-panel {
+    grid-column: auto;
+  }
+
+  .baseline-chart-wrapper-evolution {
+    height: 400px;
+  }
+
+  .baseline-chart-wrapper-comparative {
+    height: 380px;
+    min-height: 380px;
+  }
+}
+
+/* Ajustes para celulares */
+
+@media (max-width: 767.98px) {
+  .baseline-panel-header {
+    min-height: auto;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .baseline-chart-wrapper-evolution {
+    height: 340px;
+    padding: 12px;
+  }
+
+  .baseline-chart-wrapper-comparative {
+    height: 360px;
+    min-height: 360px;
+    padding: 12px;
+  }
+
+  .baseline-chart-wrapper-ranking,
+  .baseline-chart-wrapper-small {
+    height: 360px;
+    padding: 12px;
+  }
+}
+
+/* ============================================================
+   MODAL DE JUSTIFICATIVA
+============================================================ */
+
+.baseline-evento-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  color: var(--baseline-primary);
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.baseline-evento-link i {
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.baseline-evento-link:hover,
+.baseline-evento-link:focus-visible {
+  color: var(--baseline-pink);
+  text-decoration: underline;
+}
+
+.baseline-evento-link:hover i,
+.baseline-evento-link:focus-visible i {
+  opacity: 1;
+}
+
+.baseline-evento-link:focus-visible {
+  outline: 2px solid var(--baseline-pink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.baseline-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.baseline-modal[hidden] {
+  display: none;
+}
+
+.baseline-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 18, 30, 0.6);
+}
+
+.baseline-modal-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.3);
+  animation: baseline-modal-entrada 0.18s ease-out;
+}
+
+@keyframes baseline-modal-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.baseline-modal-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(100vh - 2rem);
+}
+
+.baseline-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: 0 0 auto;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.baseline-modal-title {
+  margin: 0;
+  color: #1f2333;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.baseline-modal-close {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  margin: -2px -6px 0 0;
+  color: #1f2333;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.baseline-modal-close:hover {
+  background: var(--baseline-gray-200);
+}
+
+.baseline-modal-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+}
+
+.baseline-modal-section-title {
+  margin: 0 0 0.9rem;
+  color: #1f2333;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.baseline-modal-info-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.baseline-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.baseline-modal-label {
+  margin: 0;
+  color: var(--baseline-gray-600);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.baseline-modal-readonly {
+  min-height: 40px;
+  padding: 0.55rem 0.8rem;
+  overflow: hidden;
+  color: var(--baseline-gray-600);
+  border-radius: 8px;
+  background: #eef0f5;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.baseline-modal-divider {
+  margin: 1.25rem 0;
+  border: 0;
+  border-top: 1px solid var(--baseline-gray-200);
+}
+
+.baseline-modal-editable {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.baseline-modal-input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 0.8rem;
+  color: #1f2333;
+  border: 1px solid #dfe3ea;
+  border-radius: 8px;
+  background-color: #ffffff;
+  font-size: 0.88rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.baseline-modal-input:focus {
+  outline: 0;
+  border-color: var(--baseline-primary);
+  box-shadow:
+    0 0 0 0.2rem rgba(102, 0, 153, 0.12);
+}
+
+select.baseline-modal-input {
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+textarea.baseline-modal-input {
+  min-height: 150px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.baseline-modal-error {
+  padding: 0.65rem 0.85rem;
+  color: #842029;
+  border-radius: 8px;
+  background: #f8d7da;
+  font-size: 0.8rem;
+}
+
+.baseline-modal-error[hidden] {
+  display: none;
+}
+
+.baseline-modal-footer {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  flex: 0 0 auto;
+  padding: 0.75rem 1.5rem 1.5rem;
+}
+
+.baseline-modal-btn-salvar,
+.baseline-modal-btn-cancelar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.baseline-modal-btn-salvar {
+  color: #ffffff;
+  background: var(--baseline-pink);
+  font-weight: 600;
+}
+
+.baseline-modal-btn-salvar:hover:not(:disabled) {
+  background: #a81a54;
+  transform: translateY(-1px);
+}
+
+.baseline-modal-btn-salvar:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.baseline-modal-btn-cancelar {
+  color: var(--baseline-gray-600);
+  background: transparent;
+  font-weight: 500;
+}
+
+.baseline-modal-btn-cancelar:hover {
+  color: #1f2333;
+  background: var(--baseline-gray-100);
+}
+
+@media (max-width: 575.98px) {
+  .baseline-modal-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .baseline-modal-header {
+    padding: 1.25rem 1rem 0.5rem;
+  }
+
+  .baseline-modal-body {
+    padding: 1rem;
+  }
+
+  .baseline-modal-footer {
+    padding: 0.75rem 1rem 1.25rem;
+  }
+}
+
+body.baseline-modal-aberto {
+  overflow: hidden;
+}
+
+.baseline-linha-atualizada > td {
+  animation: baseline-linha-destaque 1.6s ease-out;
+}
+
+@keyframes baseline-linha-destaque {
+  from {
+    background-color: rgba(99, 214, 0, 0.22);
+  }
+
+  to {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .baseline-modal-dialog,
+  .baseline-linha-atualizada > td {
+    animation: none;
+  }
+}
+
+</style>
+
+<link rel="stylesheet" href="/css/bootstrap-select.min.css">
+<script src="/js/bootstrap-select.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<div class="baseline-page-header">
+  
+  <div class="baseline-page-header-content">
+    <h1>
+      <i
+        class="fa fa-chart-line"
+        aria-hidden="true"
+      ></i>
+
+      <span>Guardião Baseline</span>
+    </h1>
+
+    <div class="subtitle">
+      Indicadores de SLA e causas ofensoras da Regional Nordeste
+    </div>
+  </div>
+
+  @if(periodoRef)
+    <div class="baseline-page-header-period">
+      <i
+        class="fa fa-calendar-alt"
+        aria-hidden="true"
+      ></i>
+
+      <span>
+        Período de referência:
+        <strong>{{ periodoRef }}</strong>
+      </span>
+
+      @if(ufSelecionada)
+        <span>
+          · UF:
+          <strong>{{ ufSelecionada }}</strong>
+        </span>
+      @endif
+    </div>
+  @endif
+</div>
+
+<div class="baseline-filter-panel">
+  <div class="baseline-filter-title">
+    <i
+      class="fa fa-filter"
+      aria-hidden="true"
+    ></i>
+
+    <span>Filtros do dashboard</span>
+  </div>
+
+  <form
+        id="filtros-inline"
+        method="GET"
+        action="/guardiao-baseline"
+      >
+    <div class="baseline-filter-grid">
+      <div class="baseline-filter-group">
+        <label for="busca">
+          Evento, município ou sigla
+        </label>
+
+        <input
+          type="text"
+          id="busca"
+          name="busca"
+          class="form-control"
+          maxlength="200"
+          autocomplete="off"
+          placeholder="Pesquisar evento, município ou sigla"
+          value="{{ filtros.busca || '' }}"
+        >
+      </div>
+
+      <div class="baseline-filter-group">
+        <label for="periodo">
+          Período
+        </label>
+
+        <input
+          type="text"
+          id="periodo"
+          name="periodo"
+          class="form-control"
+          maxlength="7"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="MM/AAAA"
+          value="{{ filtros.periodo || '' }}"
+        >
+      </div>
+
+      <div class="baseline-filter-group">
+        <label for="uf">
+          UF
+        </label>
+
+        <select
+          id="uf"
+          name="uf"
+          class="form-control"
+        >
+          <option value="">
+            Todas as UFs
+          </option>
+
+          @each(uf in ufsValidas)
+            <option
+              value="{{ uf }}"
+              {{ filtros.uf === uf ? 'selected' : '' }}
+            >
+              {{ uf }}
+            </option>
+          @endeach
+        </select>
+      </div>
+
+      <div class="baseline-filter-group">
+        <label for="ddd">
+          DDD
+        </label>
+
+        <input
+          type="text"
+          id="ddd"
+          name="ddd"
+          class="form-control"
+          maxlength="2"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="Ex.: 81"
+          value="{{ filtros.ddd || '' }}"
+        >
+      </div>
+
+      <div class="baseline-filter-group">
+        <label for="prioridade">
+          Prioridade
+        </label>
+
+        <select
+          id="prioridade"
+          name="prioridade"
+          class="form-control"
+        >
+          <option value="">
+            Todas
+          </option>
+
+          @each(prioridade in prioridadesValidas)
+            <option
+              value="{{ prioridade }}"
+              {{ filtros.prioridade === prioridade ? 'selected' : '' }}
+            >
+              {{ prioridade }}
+            </option>
+          @endeach
+        </select>
+      </div>
+
+      <div class="baseline-filter-group">
+        <label for="responsabilidade">
+          Responsabilidade
+        </label>
+
+        <select
+          id="responsabilidade"
+          name="responsabilidade"
+          class="form-control"
+        >
+          <option value="">
+            Todas
+          </option>
+
+          @each(responsabilidade in responsabilidadesValidas)
+            <option
+              value="{{ responsabilidade }}"
+              {{
+                filtros.responsabilidade === responsabilidade
+                  ? 'selected'
+                  : ''
+              }}
+            >
+              {{ responsabilidade }}
+            </option>
+          @endeach
+        </select>
+      </div>
+
+      <div class="baseline-filter-group">
+        <label>
+          Ações
+        </label>
+
+        <div class="baseline-filter-buttons">
+          <button
+            type="submit"
+            class="btn baseline-btn-search"
+          >
+            <i
+              class="fa fa-search"
+              aria-hidden="true"
+            ></i>
+
+            <span>Buscar</span>
+          </button>
+
+          <a
+              href="/guardiao-baseline"
+              class="btn baseline-btn-clear"
+              title="Limpar filtros"
+              >
+            <i
+              class="fa fa-eraser"
+              aria-hidden="true"
+            ></i>
+
+            <span>Limpar</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="baseline-section-header">
+  <h2 class="baseline-section-title">
+    <i
+      class="fa fa-tachometer-alt"
+      aria-hidden="true"
+    ></i>
+
+    <span>Resumo executivo do SLA</span>
+  </h2>
+
+  <span class="baseline-section-description">
+    Indicadores da UF e do período de referência
+  </span>
+</div>
+
+<div class="baseline-kpi-grid">
+  <div class="baseline-kpi-card highlight">
+    <span class="baseline-kpi-label">
+      Baseline no período
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(kpiP1.baseline || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card pink">
+    <span class="baseline-kpi-label">
+      SLA P1 · Terceira
+    </span>
+
+    <strong class="baseline-kpi-value">
+      <span
+        class="baseline-status-dot"
+        style="background-color: {{ corP1Terceira }}"
+        aria-hidden="true"
+      ></span>
+
+      @if(
+        kpiP1.mediaTerceira !== null &&
+        kpiP1.mediaTerceira !== undefined
+      )
+        {{ Number(kpiP1.mediaTerceira).toFixed(1) }}
+        <small>%</small>
+      @else
+        -
+      @endif
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card primary">
+    <span class="baseline-kpi-label">
+      SLA P1 · Regional
+    </span>
+
+    <strong class="baseline-kpi-value">
+      <span
+        class="baseline-status-dot"
+        style="background-color: {{ corP1Regional }}"
+        aria-hidden="true"
+      ></span>
+
+      @if(
+        kpiP1.mediaRegional !== null &&
+        kpiP1.mediaRegional !== undefined
+      )
+        {{ Number(kpiP1.mediaRegional).toFixed(1) }}
+        <small>%</small>
+      @else
+        -
+      @endif
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card orange">
+    <span class="baseline-kpi-label">
+      SLA P2 · Terceira
+    </span>
+
+    <strong class="baseline-kpi-value">
+      <span
+        class="baseline-status-dot"
+        style="background-color: {{ corP2Terceira }}"
+        aria-hidden="true"
+      ></span>
+
+      @if(
+        kpiP2.mediaTerceira !== null &&
+        kpiP2.mediaTerceira !== undefined
+      )
+        {{ Number(kpiP2.mediaTerceira).toFixed(1) }}
+        <small>%</small>
+      @else
+        -
+      @endif
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card blue">
+    <span class="baseline-kpi-label">
+      SLA P2 · Regional
+    </span>
+
+    <strong class="baseline-kpi-value">
+      <span
+        class="baseline-status-dot"
+        style="background-color: {{ corP2Regional }}"
+        aria-hidden="true"
+      ></span>
+
+      @if(
+        kpiP2.mediaRegional !== null &&
+        kpiP2.mediaRegional !== undefined
+      )
+        {{ Number(kpiP2.mediaRegional).toFixed(1) }}
+        <small>%</small>
+      @else
+        -
+      @endif
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card warning">
+    <span class="baseline-kpi-label">
+      GAP P1 · Terceira − Regional
+    </span>
+
+    <strong class="baseline-kpi-value">
+      @if(
+        gapRegional !== null &&
+        gapRegional !== undefined
+      )
+        {{
+          Number(gapRegional) >= 0
+            ? '+'
+            : ''
+        }}{{ Number(gapRegional).toFixed(1) }}
+
+        <small>p.p.</small>
+      @else
+        -
+      @endif
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card success">
+    <span class="baseline-kpi-label">
+      Melhor UF · Regional P1
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{ melhorUf || '-' }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card danger">
+    <span class="baseline-kpi-label">
+      UF crítica · Regional P1
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{ ufCritica || '-' }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card success">
+    <span class="baseline-kpi-label">
+      Melhor DDD · Regional P1
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{ melhorDdd || '-' }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card danger">
+  <span class="baseline-kpi-label">
+    DDD crítico · Regional P1
+  </span>
+
+    <strong class="baseline-kpi-value">
+      {{ dddCritico || '-' }}
+    </strong>
+  </div>
+</div>
+
+<div class="baseline-section-header">
+  <h2 class="baseline-section-title">
+    <i
+      class="fa fa-exclamation-triangle"
+      aria-hidden="true"
+    ></i>
+
+    <span>Resumo das causas ofensoras</span>
+  </h2>
+
+  <span class="baseline-section-description">
+    Contagens das causas conforme os filtros aplicados
+  </span>
+</div>
+
+<div class="baseline-kpi-grid">
+  <div class="baseline-kpi-card primary">
+    <span class="baseline-kpi-label">
+      Total no filtro atual
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(causas.total || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card blue">
+    <span class="baseline-kpi-label">
+      Prioridade P1
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(totalP1 || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card orange">
+    <span class="baseline-kpi-label">
+      Prioridade P2
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(totalP2 || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card warning">
+    <span class="baseline-kpi-label">
+      Prioridade P1+P2
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(totalP1P2 || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card pink">
+    <span class="baseline-kpi-label">
+      Responsabilidade Terceira
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(totalTerceira || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+
+  <div class="baseline-kpi-card primary">
+    <span class="baseline-kpi-label">
+      Responsabilidade Regional
+    </span>
+
+    <strong class="baseline-kpi-value">
+      {{
+        Number(totalRegional || 0)
+          .toLocaleString('pt-BR')
+      }}
+    </strong>
+  </div>
+</div>
+
+<div class="baseline-section-header">
+  <h2 class="baseline-section-title">
+    <i
+      class="fa fa-chart-line"
+      aria-hidden="true"
+    ></i>
+
+    <span>Evolução e análises comparativas</span>
+  </h2>
+
+  <span class="baseline-section-description">
+    Evolução mensal, rankings e diferenças entre Terceira e Regional
+  </span>
+</div>
+
+<section class="baseline-panel baseline-evolution-panel">
+  <div class="baseline-panel-header">
+    <div>
+      <h2 class="baseline-panel-title">
+        <i
+          class="fa fa-chart-line"
+          aria-hidden="true"
+        ></i>
+
+        <span>Evolução mensal do SLA</span>
+      </h2>
+
+      <div class="baseline-panel-subtitle">
+        Comparação entre Terceira e Regional nas prioridades P1 e P2
+      </div>
+    </div>
+  </div>
+
+  @if(
+    !Array.isArray(evolucao) ||
+    evolucao.length === 0
+  )
+    <div class="baseline-empty">
+      <i
+        class="fa fa-chart-line"
+        aria-hidden="true"
+      ></i>
+
+      Nenhum dado de evolução disponível.
+    </div>
+  @else
+    <div class="baseline-chart-wrapper-evolution">
+      <canvas
+        id="graficoEvolucaoBaseline"
+        role="img"
+        aria-label="Evolução mensal do SLA P1 e P2 da Terceira e da Regional"
+      ></canvas>
+    </div>
+  @endif
+</section>
+
+<div class="baseline-comparative-grid">
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-trophy"
+            aria-hidden="true"
+          ></i>
+
+          <span>Ranking UF</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          SLA P1 da Terceira e da Regional por UF
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(rankingUfGrafico) ||
+      rankingUfGrafico.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-chart-bar"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados para o Ranking UF.
+      </div>
+    @else
+      <div class="baseline-chart-wrapper-comparative">
+        <canvas
+          id="graficoRankingUf"
+          role="img"
+          aria-label="Ranking do SLA P1 da Terceira e da Regional por UF"
+        ></canvas>
+      </div>
+    @endif
+  </section>
+
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-phone"
+            aria-hidden="true"
+          ></i>
+
+          <span>Ranking DDD</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Comparação do SLA P1 da Terceira e da Regional por DDD
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(rankingDddGrafico) ||
+      rankingDddGrafico.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-chart-bar"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados para o Ranking DDD.
+      </div>
+    @else
+      <div class="baseline-chart-wrapper-comparative">
+        <canvas
+          id="graficoRankingDdd"
+          role="img"
+          aria-label="Ranking do SLA P1 da Terceira e da Regional por DDD"
+        ></canvas>
+      </div>
+    @endif
+  </section>
+
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-balance-scale"
+            aria-hidden="true"
+          ></i>
+
+          <span>GAP UF x Regional</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Diferença em pontos percentuais entre Terceira P1 e Regional P1
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(gapUfRegional) ||
+      gapUfRegional.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-chart-bar"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados de GAP por UF.
+      </div>
+    @else
+      <div class="baseline-chart-wrapper-comparative">
+        <canvas
+          id="graficoGapUfRegional"
+          role="img"
+          aria-label="GAP de SLA P1 entre Terceira e Regional por UF"
+        ></canvas>
+      </div>
+    @endif
+  </section>
+</div>
+
+<div class="baseline-section-header">
+  <h2 class="baseline-section-title">
+    <i
+      class="fa fa-list-ol"
+      aria-hidden="true"
+    ></i>
+
+    <span>Detalhamento dos rankings</span>
+  </h2>
+
+  <span class="baseline-section-description">
+    Classificação detalhada dos indicadores por UF e DDD
+  </span>
+</div>
+
+<div class="baseline-ranking-tables-grid">
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-trophy"
+            aria-hidden="true"
+          ></i>
+
+          <span>Ranking por UF</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Ordenado pelo SLA P1 da Terceira
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(ranking) ||
+      ranking.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-list-ol"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados para o período selecionado.
+      </div>
+    @else
+      <div class="baseline-table-responsive">
+        <table
+          class="baseline-table"
+          style="min-width: 520px"
+        >
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>UF</th>
+              <th>P1 Terceira</th>
+              <th>P2 Terceira</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @each((item, index) in ranking)
+              <tr>
+                <td>
+                  <strong>
+                    {{ index + 1 }}º
+                  </strong>
+                </td>
+
+                <td>
+                  <strong>
+                    {{ item.uf || '-' }}
+                  </strong>
+                </td>
+
+                <td>
+                  @if(
+                    item.terceiraP1 !== null &&
+                    item.terceiraP1 !== undefined
+                  )
+                    {{ Number(item.terceiraP1).toFixed(1) }}%
+                  @else
+                    -
+                  @endif
+                </td>
+
+                <td>
+                  @if(
+                    item.terceiraP2 !== null &&
+                    item.terceiraP2 !== undefined
+                  )
+                    {{ Number(item.terceiraP2).toFixed(1) }}%
+                  @else
+                    -
+                  @endif
+                </td>
+              </tr>
+            @endeach
+          </tbody>
+        </table>
+      </div>
+    @endif
+  </section>
+
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-phone"
+            aria-hidden="true"
+          ></i>
+
+          <span>Ranking por DDD</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Comparativo de SLA P1 e P2 entre Terceira e Regional
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(rankingDdd) ||
+      rankingDdd.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-list-ol"
+          aria-hidden="true"
+        ></i>
+
+        Nenhum DDD disponível para o período selecionado.
+      </div>
+    @else
+      <div class="baseline-table-responsive">
+        <table
+          class="baseline-table"
+          style="min-width: 760px"
+        >
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>DDD</th>
+              <th>P1 Terceira</th>
+              <th>P1 Regional</th>
+              <th>GAP P1</th>
+              <th>P2 Terceira</th>
+              <th>P2 Regional</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @each((item, index) in rankingDdd)
+              <tr>
+                <td>
+                  <strong>
+                    {{ index + 1 }}º
+                  </strong>
+                </td>
+
+                <td>
+                  <strong>
+                    {{ item.ddd || '-' }}
+                  </strong>
+                </td>
+
+                <td>
+                  @if(
+                    item.terceiraP1 !== null &&
+                    item.terceiraP1 !== undefined
+                  )
+                    {{ Number(item.terceiraP1).toFixed(1) }}%
+                  @else
+                    -
+                  @endif
+                </td>
+
+                <td>
+                  @if(
+                    item.regionalP1 !== null &&
+                    item.regionalP1 !== undefined
+                  )
+                    {{ Number(item.regionalP1).toFixed(1) }}%
+                  @else
+                    -
+                  @endif
+                </td>
+
+                <td>
+                  @if(
+                    item.gapP1 !== null &&
+                    item.gapP1 !== undefined
+                  )
+                    {{
+                      Number(item.gapP1) >= 0
+                        ? '+'
+                        : ''
+                    }}{{ Number(item.gapP1).toFixed(1) }}
+                    p.p.
+                  @else
+                    -
+                  @endif
+                </td>
+
+                <td>
+                  @if(
+                    item.terceiraP2 !== null &&
+                    item.terceiraP2 !== undefined
+                  )
+                    {{ Number(item.terceiraP2).toFixed(1) }}%
+                  @else
+                    -
+                  @endif
+                </td>
+
+                <td>
+                  @if(
+                    item.regionalP2 !== null &&
+                    item.regionalP2 !== undefined
+                  )
+                    {{ Number(item.regionalP2).toFixed(1) }}%
+                  @else
+                    -
+                  @endif
+                </td>
+              </tr>
+            @endeach
+          </tbody>
+        </table>
+      </div>
+    @endif
+  </section>
+</div>
+
+<div class="baseline-section-header">
+  <h2 class="baseline-section-title">
+    <i
+      class="fa fa-exclamation-triangle"
+      aria-hidden="true"
+    ></i>
+
+    <span>Análise de Causas Ofensoras</span>
+  </h2>
+
+  <span class="baseline-section-description">
+    Distribuição das causas conforme os filtros aplicados
+  </span>
+</div>
+
+<div class="baseline-cause-charts-grid">
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-chart-bar"
+            aria-hidden="true"
+          ></i>
+
+          <span>Top tipos de falha</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Tipos de falha com maior quantidade de registros
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(causasPorTipoFalha) ||
+      causasPorTipoFalha.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-chart-bar"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados de tipos de falha.
+      </div>
+    @else
+      <div class="baseline-chart-wrapper-ranking">
+        <canvas
+          id="graficoCausasTipoFalha"
+          role="img"
+          aria-label="Tipos de falha com maior quantidade de causas ofensoras"
+        ></canvas>
+      </div>
+    @endif
+  </section>
+
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-users"
+            aria-hidden="true"
+          ></i>
+
+          <span>Responsabilidade</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Distribuição entre Terceira e Regional
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(causasPorResponsabilidade) ||
+      causasPorResponsabilidade.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-chart-pie"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados de responsabilidade.
+      </div>
+    @else
+      <div class="baseline-chart-wrapper-small">
+        <canvas
+          id="graficoCausasResponsabilidade"
+          role="img"
+          aria-label="Distribuição das causas por responsabilidade"
+        ></canvas>
+      </div>
+    @endif
+  </section>
+
+  <section class="baseline-panel">
+    <div class="baseline-panel-header">
+      <div>
+        <h2 class="baseline-panel-title">
+          <i
+            class="fa fa-exclamation-circle"
+            aria-hidden="true"
+          ></i>
+
+          <span>Prioridade</span>
+        </h2>
+
+        <div class="baseline-panel-subtitle">
+          Distribuição entre P1, P2 e P1+P2
+        </div>
+      </div>
+    </div>
+
+    @if(
+      !Array.isArray(causasPorPrioridade) ||
+      causasPorPrioridade.length === 0
+    )
+      <div class="baseline-empty">
+        <i
+          class="fa fa-chart-pie"
+          aria-hidden="true"
+        ></i>
+
+        Sem dados de prioridade.
+      </div>
+    @else
+      <div class="baseline-chart-wrapper-small">
+        <canvas
+          id="graficoCausasPrioridade"
+          role="img"
+          aria-label="Distribuição das causas por prioridade"
+        ></canvas>
+      </div>
+    @endif
+  </section>
+</div>
+
+<div class="baseline-table-container">
+  <div class="baseline-table-header">
+    <span class="baseline-table-title">
+      <i
+        class="fa fa-table"
+        aria-hidden="true"
+      ></i>
+
+      <span>Detalhamento das causas ofensoras</span>
+    </span>
+
+    <span class="baseline-table-count">
+      {{
+        Number(causas.total || 0)
+          .toLocaleString('pt-BR')
+      }}
+      registro(s)
+
+      @if(Number(causas.total || 0) > 0)
+        · Página {{ causas.currentPage }}
+        de {{ causas.lastPage }}
+      @endif
+    </span>
+  </div>
+
+  @if(causas.length === 0)
+    <div class="baseline-empty">
+      <i
+        class="fa fa-search"
+        aria-hidden="true"
+      ></i>
+
+      Nenhum evento encontrado para os filtros selecionados.
+    </div>
+  @else
+    <div class="baseline-table-responsive">
+      <table class="table table-hover baseline-table">
+        <thead>
+          <tr>
+            <th>Dia</th>
+            <th>Evento</th>
+            <th>Tipo de falha</th>
+            <th>UF</th>
+            <th>Município</th>
+            <th>DDD</th>
+            <th>Sigla</th>
+            <th>Prioridade</th>
+            <th>Responsabilidade</th>
+            <th>Justificativa</th>
+            <th>Descrição</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @each(causa in causas)
+            <tr data-causa-id="{{ causa.id }}">
+              <td class="baseline-table-nowrap">
+                {{ causa.dia_formatado || causa.dia || '-' }}
+              </td>
+
+              <td class="baseline-table-nowrap">
+                <button
+                  type="button"
+                  class="baseline-evento-link js-editar-justificativa"
+                  data-id="{{ causa.id }}"
+                  data-evento="{{ causa.evento || '' }}"
+                  data-tipo-falha="{{ causa.tipo_falha_rede || '' }}"
+                  data-uf="{{ causa.uf || '' }}"
+                  data-prioridade="{{ causa.prioridade || '' }}"
+                  data-municipio="{{ causa.municipio || '' }}"
+                  data-responsabilidade="{{ causa.responsabilidade || '' }}"
+                  data-ddd="{{ causa.ddd || '' }}"
+                  data-dia="{{ causa.dia_iso || causa.dia_formatado || '' }}"
+                  data-sigla="{{ causa.sigla || '' }}"
+                  data-justificativa="{{ causa.justificativas || '' }}"
+                  data-descricao="{{ causa.descricao_justificativa || '' }}"
+                  title="Editar justificativa e descrição"
+                >
+                  <strong>
+                    {{ causa.evento || '-' }}
+                  </strong>
+
+                  <i
+                    class="fa fa-pen"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </td>
+
+              <td class="baseline-table-failure">
+                {{ causa.tipo_falha_rede || '-' }}
+              </td>
+
+              <td>
+                <strong>
+                  {{ causa.uf || '-' }}
+                </strong>
+              </td>
+
+              <td>
+                {{ causa.municipio || '-' }}
+              </td>
+
+              <td>
+                {{ causa.ddd || '-' }}
+              </td>
+
+              <td class="baseline-table-nowrap">
+                {{ causa.sigla || '-' }}
+              </td>
+
+              <td>
+                @if(causa.prioridade === 'P1')
+                  <span class="baseline-tag baseline-tag-p1">
+                    P1
+                  </span>
+                @elseif(causa.prioridade === 'P2')
+                  <span class="baseline-tag baseline-tag-p2">
+                    P2
+                  </span>
+                @elseif(causa.prioridade === 'P1+P2')
+                  <span class="baseline-tag baseline-tag-p1p2">
+                    P1+P2
+                  </span>
+                @else
+                  {{ causa.prioridade || '-' }}
+                @endif
+              </td>
+
+              <td>
+                @if(causa.responsabilidade === 'Terceira')
+                  <span class="baseline-tag baseline-tag-terceira">
+                    Terceira
+                  </span>
+                @elseif(causa.responsabilidade === 'Regional')
+                  <span class="baseline-tag baseline-tag-regional">
+                    Regional
+                  </span>
+                @else
+                  {{ causa.responsabilidade || '-' }}
+                @endif
+              </td>
+
+              <td class="js-celula-justificativa">
+                {{ causa.justificativas || '-' }}
+              </td>
+
+              <td class="baseline-table-description js-celula-descricao">
+                {{ causa.descricao_justificativa || '-' }}
+              </td>
+            </tr>
+          @endeach
+        </tbody>
+      </table>
+    </div>
+  @endif
+</div>
+@if(ultimaPagina > 1)
+  <nav
+    class="baseline-pagination"
+    aria-label="Paginação das causas ofensoras"
+  >
+    @if(paginaAtual > 1)
+      <a
+        href="{{ causas.getUrl(paginaAtual - 1) }}"
+        aria-label="Ir para a página anterior"
+        rel="prev"
+      >
+        <i
+          class="fa fa-chevron-left"
+          aria-hidden="true"
+        ></i>
+
+        <span>Anterior</span>
+      </a>
+    @else
+      <span
+        class="disabled"
+        aria-disabled="true"
+      >
+        <i
+          class="fa fa-chevron-left"
+          aria-hidden="true"
+        ></i>
+
+        <span>Anterior</span>
+      </span>
+    @endif
+
+    @if(paginaInicial > 1)
+      <a
+        href="{{ causas.getUrl(1) }}"
+        aria-label="Ir para a página 1"
+      >
+        1
+      </a>
+
+      @if(paginaInicial > 2)
+        <span
+          class="ellipsis"
+          aria-hidden="true"
+        >
+          ...
+        </span>
+      @endif
+    @endif
+
+    @each(
+      link in causas.getUrlsForRange(
+        paginaInicial,
+        paginaFinal
+      )
+    )
+      @if(link.isActive)
+        <span
+          class="active"
+          aria-current="page"
+        >
+          {{ link.page }}
+        </span>
+      @else
+        <a
+          href="{{ link.url }}"
+          aria-label="Ir para a página {{ link.page }}"
+        >
+          {{ link.page }}
+        </a>
+      @endif
+    @endeach
+
+    @if(paginaFinal < ultimaPagina)
+      @if(paginaFinal < ultimaPagina - 1)
+        <span
+          class="ellipsis"
+          aria-hidden="true"
+        >
+          ...
+        </span>
+      @endif
+
+      <a
+        href="{{ causas.getUrl(ultimaPagina) }}"
+        aria-label="Ir para a última página, página {{ ultimaPagina }}"
+      >
+        {{ ultimaPagina }}
+      </a>
+    @endif
+
+    @if(paginaAtual < ultimaPagina)
+      <a
+        href="{{ causas.getUrl(paginaAtual + 1) }}"
+        aria-label="Ir para a próxima página"
+        rel="next"
+      >
+        <span>Próxima</span>
+
+        <i
+          class="fa fa-chevron-right"
+          aria-hidden="true"
+        ></i>
+      </a>
+    @else
+      <span
+        class="disabled"
+        aria-disabled="true"
+      >
+        <span>Próxima</span>
+
+        <i
+          class="fa fa-chevron-right"
+          aria-hidden="true"
+        ></i>
+      </span>
+    @endif
+  </nav>
+@endif
+
+{{-- ============================================================
+     MODAL DE JUSTIFICATIVA
+     Aberto ao clicar no evento da tabela de causas.
+     Salva via PUT /guardiao-baseline/causas/:id
+============================================================ --}}
+<div
+  id="modalJustificativa"
+  class="baseline-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modalJustificativaTitulo"
+  hidden
+>
+  <div
+    class="baseline-modal-backdrop"
+    data-fechar-modal
+  ></div>
+
+  <div class="baseline-modal-dialog">
+    <form
+      id="formJustificativa"
+      class="baseline-modal-form"
+      data-csrf="{{ csrfToken || '' }}"
+      novalidate
+    >
+      <div class="baseline-modal-header">
+        <h2
+          id="modalJustificativaTitulo"
+          class="baseline-modal-title"
+        >
+          Justificativa de Perda de Prazo do TA
+        </h2>
+
+        <button
+          type="button"
+          class="baseline-modal-close"
+          data-fechar-modal
+          aria-label="Fechar"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="baseline-modal-body">
+        <input
+          type="hidden"
+          id="modalJustificativaId"
+        >
+
+        <h3 class="baseline-modal-section-title">
+          Informações do Evento
+        </h3>
+
+        <div class="baseline-modal-info-grid">
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Evento</span>
+            <div
+              id="modalInfoEvento"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Tipo Falha Rede</span>
+            <div
+              id="modalInfoTipoFalha"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">UF</span>
+            <div
+              id="modalInfoUf"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Prioridade</span>
+            <div
+              id="modalInfoPrioridade"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Município</span>
+            <div
+              id="modalInfoMunicipio"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Responsabilidade</span>
+            <div
+              id="modalInfoResponsabilidade"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">DDD</span>
+            <div
+              id="modalInfoDdd"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Dia</span>
+            <div
+              id="modalInfoDia"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+
+          <div class="baseline-modal-field">
+            <span class="baseline-modal-label">Sigla</span>
+            <div
+              id="modalInfoSigla"
+              class="baseline-modal-readonly"
+            >-</div>
+          </div>
+        </div>
+
+        <hr class="baseline-modal-divider">
+
+        <div class="baseline-modal-editable">
+          <div class="baseline-modal-field">
+            <label
+              for="modalJustificativaCampo"
+              class="baseline-modal-label"
+            >
+              Justificativa
+            </label>
+
+            <select
+              id="modalJustificativaCampo"
+              name="justificativas"
+              class="baseline-modal-input"
+            >
+              @each(opcao in opcoesJustificativa)
+                <option value="{{ opcao }}">
+                  {{ opcao }}
+                </option>
+              @endeach
+            </select>
+          </div>
+
+          <div class="baseline-modal-field">
+            <label
+              for="modalDescricaoCampo"
+              class="baseline-modal-label"
+            >
+              Descrição da Justificativa
+            </label>
+
+            <textarea
+              id="modalDescricaoCampo"
+              name="descricao_justificativa"
+              class="baseline-modal-input"
+              rows="6"
+              maxlength="2000"
+            ></textarea>
+          </div>
+
+          <div
+            id="modalJustificativaErro"
+            class="baseline-modal-error"
+            role="alert"
+            hidden
+          ></div>
+        </div>
+      </div>
+
+      <div class="baseline-modal-footer">
+        <button
+          type="submit"
+          id="modalJustificativaSalvar"
+          class="baseline-modal-btn-salvar"
+        >
+          <i
+            class="fa fa-save"
+            aria-hidden="true"
+          ></i>
+
+          <span>Salvar</span>
+        </button>
+
+        <button
+          type="button"
+          class="baseline-modal-btn-cancelar"
+          data-fechar-modal
+        >
+          <i
+            class="fa fa-times"
+            aria-hidden="true"
+          ></i>
+
+          <span>Cancelar</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    const dadosEvolucao =
+      {{{ stringify(evolucao || []) }}};
+
+    const dadosRankingUf =
+      {{{ stringify(rankingUfGrafico || []) }}};
+
+    const dadosRankingDdd =
+      {{{ stringify(rankingDddGrafico || []) }}};
+
+    const dadosGapUf =
+      {{{ stringify(gapUfRegional || []) }}};
+
+    const dadosCausasTipoFalha =
+      {{{ stringify(causasPorTipoFalha || []) }}};
+
+    const dadosCausasResponsabilidade =
+      {{{ stringify(causasPorResponsabilidade || []) }}};
+
+    const dadosCausasPrioridade =
+      {{{ stringify(causasPorPrioridade || []) }}};
+
+    let graficoEvolucaoBaseline = null;
+    let graficoRankingUf = null;
+    let graficoRankingDdd = null;
+    let graficoGapUfRegional = null;
+    let graficoCausasTipoFalha = null;
+    let graficoCausasResponsabilidade = null;
+    let graficoCausasPrioridade = null;
+
+    function normalizarNumeroOuNull(valor) {
+      if (
+        valor === null ||
+        valor === undefined ||
+        valor === ''
+      ) {
+        return null;
+      }
+
+      let valorNormalizado = valor;
+
+      if (typeof valor === 'string') {
+        valorNormalizado =
+          valor
+            .trim()
+            .replace(',', '.');
+      }
+
+      const numero =
+        Number(valorNormalizado);
+
+      return Number.isFinite(numero)
+        ? numero
+        : null;
+    }
+
+    function formatarPercentual(valor) {
+      const numero =
+        normalizarNumeroOuNull(valor);
+
+      if (numero === null) {
+        return '-';
+      }
+
+      return (
+        numero.toLocaleString(
+          'pt-BR',
+          {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }
+        ) +
+        '%'
+      );
+    }
+
+    function formatarQuantidade(valor) {
+      const numero =
+        normalizarNumeroOuNull(valor);
+
+      if (numero === null) {
+        return '0';
+      }
+
+      return numero.toLocaleString(
+        'pt-BR',
+        {
+          maximumFractionDigits: 0
+        }
+      );
+    }
+
+    function formatarPontosPercentuais(valor) {
+      const numero =
+        normalizarNumeroOuNull(valor);
+
+      if (numero === null) {
+        return '-';
+      }
+
+      return (
+        (
+          numero >= 0
+            ? '+'
+            : ''
+        ) +
+        numero.toLocaleString(
+          'pt-BR',
+          {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+          }
+        ) +
+        ' p.p.'
+      );
+    }
+
+    function destruirGraficoExistente(
+      canvas,
+      instancia
+    ) {
+      if (
+        instancia &&
+        typeof instancia.destroy ===
+          'function'
+      ) {
+        instancia.destroy();
+      }
+
+      if (
+        typeof Chart === 'undefined' ||
+        !canvas
+      ) {
+        return;
+      }
+
+      const graficoExistente =
+        Chart.getChart(canvas);
+
+      if (
+        graficoExistente &&
+        graficoExistente !== instancia
+      ) {
+        graficoExistente.destroy();
+      }
+    }
+
+    function criarDatasetEvolucao(
+      label,
+      campo,
+      cor,
+      tracejado
+    ) {
+      return {
+        label: label,
+
+        data:
+          dadosEvolucao.map(
+            function (item) {
+              return normalizarNumeroOuNull(
+                item[campo]
+              );
+            }
+          ),
+
+        borderColor: cor,
+        backgroundColor: cor,
+        pointBackgroundColor: cor,
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 3,
+
+        borderDash:
+          tracejado
+            ? [7, 5]
+            : [],
+
+        tension: 0.35,
+        spanGaps: false,
+        fill: false
+      };
+    }
+
+        
+    function obterOpcoesBarrasPercentuais() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'x',
+
+    animation: {
+      duration: 450
+    },
+
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+
+        labels: {
+          usePointStyle: true,
+          boxWidth: 9,
+          padding: 18
+        }
+      },
+
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return (
+              context.dataset.label +
+              ': ' +
+              formatarPercentual(
+                context.raw
+              )
+            );
+          }
+        }
+      }
+    },
+
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+
+        title: {
+          display: true,
+          text: 'Localidade'
+        },
+
+        ticks: {
+          color: '#6c757d',
+          autoSkip: false,
+          maxRotation: 45,
+          minRotation: 0
+        }
+      },
+
+      y: {
+        beginAtZero: true,
+        suggestedMax: 100,
+
+        grid: {
+          color:
+            'rgba(108, 117, 125, 0.12)'
+        },
+
+        title: {
+          display: true,
+          text: 'SLA (%)'
+        },
+
+        ticks: {
+          color: '#6c757d',
+
+          callback: function (valor) {
+            return valor + '%';
+          }
+        }
+      }
+    }
+  };
+}
+    function inicializarGraficoEvolucao() {
+      const canvas =
+        document.getElementById(
+          'graficoEvolucaoBaseline'
+        );
+
+      if (
+        !canvas ||
+        !Array.isArray(dadosEvolucao) ||
+        dadosEvolucao.length === 0
+      ) {
+        return;
+      }
+
+      destruirGraficoExistente(
+        canvas,
+        graficoEvolucaoBaseline
+      );
+
+      graficoEvolucaoBaseline =
+        new Chart(
+          canvas,
+          {
+            type: 'line',
+
+            data: {
+              labels:
+                dadosEvolucao.map(
+                  function (item) {
+                    return String(
+                      item.periodo || ''
+                    );
+                  }
+                ),
+
+              datasets: [
+                criarDatasetEvolucao(
+                  'P1 Terceira',
+                  'terceiraP1',
+                  '#cb2166',
+                  false
+                ),
+
+                criarDatasetEvolucao(
+                  'P1 Regional',
+                  'regionalP1',
+                  '#660099',
+                  true
+                ),
+
+                criarDatasetEvolucao(
+                  'P2 Terceira',
+                  'terceiraP2',
+                  '#ff9200',
+                  false
+                ),
+
+                criarDatasetEvolucao(
+                  'P2 Regional',
+                  'regionalP2',
+                  '#0066ff',
+                  true
+                )
+              ]
+            },
+
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+
+              animation: {
+                duration: 450
+              },
+
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'bottom',
+
+                  labels: {
+                    usePointStyle: true,
+                    boxWidth: 9,
+                    padding: 18
+                  }
+                },
+
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      return (
+                        context.dataset.label +
+                        ': ' +
+                        formatarPercentual(
+                          context.raw
+                        )
+                      );
+                    }
+                  }
+                }
+              },
+
+              scales: {
+                x: {
+                  grid: {
+                    display: false
+                  },
+
+                  ticks: {
+                    color: '#6c757d',
+                    maxRotation: 45,
+                    minRotation: 0
+                  }
+                },
+
+                y: {
+                  beginAtZero: true,
+                  suggestedMax: 100,
+
+                  grid: {
+                    color:
+                      'rgba(108, 117, 125, 0.12)'
+                  },
+
+                  title: {
+                    display: true,
+                    text: 'SLA (%)'
+                  },
+
+                  ticks: {
+                    color: '#6c757d',
+
+                    callback: function (valor) {
+                      return valor + '%';
+                    }
+                  }
+                }
+              }
+            }
+          }
+        );
+    }
+
+    function inicializarGraficoRankingUf() {
+      const canvas =
+        document.getElementById(
+          'graficoRankingUf'
+        );
+
+      if (
+        !canvas ||
+        !Array.isArray(dadosRankingUf) ||
+        dadosRankingUf.length === 0
+      ) {
+        return;
+      }
+
+      destruirGraficoExistente(
+        canvas,
+        graficoRankingUf
+      );
+
+      graficoRankingUf =
+        new Chart(
+          canvas,
+          {
+            type: 'bar',
+
+            data: {
+              labels:
+                dadosRankingUf.map(
+                  function (item) {
+                    return String(
+                      item.uf || ''
+                    );
+                  }
+                ),
+
+              datasets: [
+                {
+                  label: 'P1 Terceira',
+
+                  data:
+                    dadosRankingUf.map(
+                      function (item) {
+                        return normalizarNumeroOuNull(
+                          item.terceiraP1
+                        );
+                      }
+                    ),
+
+                  backgroundColor:
+                    '#cb2166',
+
+                  borderColor:
+                    '#cb2166',
+
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  borderSkipped: false,
+                  maxBarThickness: 44,
+                  categoryPercentage: 0.75,
+                  barPercentage: 0.85
+                },
+
+                {
+                  label: 'P1 Regional',
+
+                  data:
+                    dadosRankingUf.map(
+                      function (item) {
+                        return normalizarNumeroOuNull(
+                          item.regionalP1
+                        );
+                      }
+                    ),
+
+                  backgroundColor:
+                    '#660099',
+
+                  borderColor:
+                    '#660099',
+
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  borderSkipped: false,
+                  maxBarThickness: 44,
+                  categoryPercentage: 0.75,
+                  barPercentage: 0.85
+                }
+              ]
+            },
+
+            options:
+              obterOpcoesBarrasPercentuais()
+          }
+        );
+    }
+        
+    function inicializarGraficoRankingDdd() {
+      const canvas =
+        document.getElementById(
+          'graficoRankingDdd'
+        );
+
+      if (
+        !canvas ||
+        !Array.isArray(dadosRankingDdd) ||
+        dadosRankingDdd.length === 0
+      ) {
+        return;
+      }
+
+      destruirGraficoExistente(
+        canvas,
+        graficoRankingDdd
+      );
+
+      graficoRankingDdd =
+        new Chart(
+          canvas,
+          {
+            type: 'bar',
+
+            data: {
+              labels:
+                dadosRankingDdd.map(
+                  function (item) {
+                    return String(
+                      item.ddd || ''
+                    );
+                  }
+                ),
+
+              datasets: [
+                {
+                  label: 'P1 Terceira',
+
+                  data:
+                    dadosRankingDdd.map(
+                      function (item) {
+                        return normalizarNumeroOuNull(
+                          item.terceiraP1
+                        );
+                      }
+                    ),
+
+                  backgroundColor:
+                    '#cb2166',
+
+                  borderColor:
+                    '#cb2166',
+
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  borderSkipped: false,
+                  maxBarThickness: 36,
+                  categoryPercentage: 0.72,
+                  barPercentage: 0.82
+                },
+
+                {
+                  label: 'P1 Regional',
+
+                  data:
+                    dadosRankingDdd.map(
+                      function (item) {
+                        return normalizarNumeroOuNull(
+                          item.regionalP1
+                        );
+                      }
+                    ),
+
+                  backgroundColor:
+                    '#660099',
+
+                  borderColor:
+                    '#660099',
+
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  borderSkipped: false,
+                  maxBarThickness: 36,
+                  categoryPercentage: 0.72,
+                  barPercentage: 0.82
+                }
+              ]
+            },
+
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: 'x',
+
+              animation: {
+                duration: 450
+              },
+
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'bottom',
+
+                  labels: {
+                    usePointStyle: true,
+                    boxWidth: 9,
+                    padding: 18
+                  }
+                },
+
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      return (
+                        context.dataset.label +
+                        ': ' +
+                        formatarPercentual(
+                          context.raw
+                        )
+                      );
+                    }
+                  }
+                }
+              },
+
+              scales: {
+                x: {
+                  grid: {
+                    display: false
+                  },
+
+                  title: {
+                    display: true,
+                    text: 'DDD'
+                  },
+
+                  ticks: {
+                    color: '#6c757d',
+                    autoSkip: false,
+                    maxRotation: 45,
+                    minRotation: 0
+                  }
+                },
+
+                y: {
+                  beginAtZero: true,
+                  suggestedMax: 100,
+
+                  grid: {
+                    color:
+                      'rgba(108, 117, 125, 0.12)'
+                  },
+
+                  title: {
+                    display: true,
+                    text: 'SLA (%)'
+                  },
+
+                  ticks: {
+                    color: '#6c757d',
+
+                    callback: function (valor) {
+                      return valor + '%';
+                    }
+                  }
+                }
+              }
+            }
+          }
+        );
+    }
+        
+
+function obterCorGap(valor) {
+      const numero =
+        normalizarNumeroOuNull(valor);
+
+      if (numero === null) {
+        return '#94a3b8';
+      }
+
+      const valorAbsoluto =
+        Math.abs(numero);
+
+      if (valorAbsoluto <= 5) {
+        return '#28a745';
+      }
+
+      if (valorAbsoluto <= 10) {
+        return '#ffb703';
+      }
+
+      return '#dc3545';
+    }
+    function inicializarGraficoGapUf() {
+      const canvas =
+        document.getElementById(
+          'graficoGapUfRegional'
+        );
+
+      if (
+        !canvas ||
+        !Array.isArray(dadosGapUf) ||
+        dadosGapUf.length === 0
+      ) {
+        return;
+      }
+
+      destruirGraficoExistente(
+        canvas,
+        graficoGapUfRegional
+      );
+
+      graficoGapUfRegional =
+        new Chart(
+          canvas,
+          {
+            type: 'bar',
+
+            data: {
+              labels:
+                dadosGapUf.map(
+                  function (item) {
+                    return String(
+                      item.uf || ''
+                    );
+                  }
+                ),
+
+              datasets: [
+                {
+                  label:
+                    'GAP P1 Terceira - Regional',
+
+                  data:
+                    dadosGapUf.map(
+                      function (item) {
+                        return normalizarNumeroOuNull(
+                          item.gapP1
+                        );
+                      }
+                    ),
+
+                  backgroundColor:
+                    dadosGapUf.map(
+                      function (item) {
+                        return obterCorGap(
+                          item.gapP1
+                        );
+                      }
+                    ),
+
+                  borderColor:
+                    dadosGapUf.map(
+                      function (item) {
+                        return obterCorGap(
+                          item.gapP1
+                        );
+                      }
+                    ),
+
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  borderSkipped: false,
+                  maxBarThickness: 48,
+                  categoryPercentage: 0.72,
+                  barPercentage: 0.82
+                }
+              ]
+            },
+
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: 'x',
+
+              animation: {
+                duration: 450
+              },
+
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
+
+              plugins: {
+                legend: {
+                  display: false
+                },
+
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      return formatarPontosPercentuais(
+                        context.raw
+                      );
+                    },
+
+                    afterLabel: function (context) {
+                      const item =
+                        dadosGapUf[
+                          context.dataIndex
+                        ];
+
+                      if (!item) {
+                        return [];
+                      }
+
+                      return [
+                        'Terceira: ' +
+                          formatarPercentual(
+                            item.terceiraP1
+                          ),
+
+                        'Regional: ' +
+                          formatarPercentual(
+                            item.regionalP1
+                          )
+                      ];
+                    }
+                  }
+                }
+              },
+
+              scales: {
+                x: {
+                  grid: {
+                    display: false
+                  },
+
+                  title: {
+                    display: true,
+                    text: 'UF'
+                  },
+
+                  ticks: {
+                    color: '#6c757d',
+                    autoSkip: false,
+                    maxRotation: 45,
+                    minRotation: 0
+                  }
+                },
+
+                y: {
+                  grid: {
+                    color:
+                      'rgba(108, 117, 125, 0.12)'
+                  },
+
+                  title: {
+                    display: true,
+                    text: 'Pontos percentuais'
+                  },
+
+                  ticks: {
+                    color: '#6c757d',
+
+                    callback: function (valor) {
+                      return valor + ' p.p.';
+                    }
+                  }
+                }
+              }
+            }
+          }
+        );
+    }
+      
+
+    function inicializarGraficoTipoFalha() {
+          const canvas =
+            document.getElementById(
+              'graficoCausasTipoFalha'
+            );
+
+          if (
+            !canvas ||
+            !Array.isArray(
+              dadosCausasTipoFalha
+            ) ||
+            dadosCausasTipoFalha.length ===
+              0
+          ) {
+            return;
+          }
+
+          destruirGraficoExistente(
+            canvas,
+            graficoCausasTipoFalha
+          );
+
+          graficoCausasTipoFalha =
+            new Chart(
+              canvas,
+              {
+                type: 'bar',
+
+                data: {
+                  labels:
+                    dadosCausasTipoFalha.map(
+                      function (item) {
+                        return String(
+                          item.label || ''
+                        );
+                      }
+                    ),
+
+                  datasets: [
+                    {
+                      label: 'Quantidade',
+
+                      data:
+                        dadosCausasTipoFalha.map(
+                          function (item) {
+                            return (
+                              normalizarNumeroOuNull(
+                                item.total
+                              ) ?? 0
+                            );
+                          }
+                        ),
+
+                      backgroundColor:
+                        '#660099',
+
+                      borderColor:
+                        '#4d0075',
+
+                      borderWidth: 1,
+                      borderRadius: 5
+                    }
+                  ]
+                },
+
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  indexAxis: 'y',
+
+                  animation: {
+                    duration: 450
+                  },
+
+                  interaction: {
+                    mode: 'nearest',
+                    intersect: false
+                  },
+
+                  plugins: {
+                    legend: {
+                      display: false
+                    },
+
+                    tooltip: {
+                      callbacks: {
+                        label: function (context) {
+                          return (
+                            'Quantidade: ' +
+                            formatarQuantidade(
+                              context.raw
+                            )
+                          );
+                        }
+                      }
+                    }
+                  },
+
+                  scales: {
+                    x: {
+                      beginAtZero: true,
+
+                      grid: {
+                        color:
+                          'rgba(108, 117, 125, 0.12)'
+                      },
+
+                      title: {
+                        display: true,
+                        text: 'Quantidade'
+                      },
+
+                      ticks: {
+                        color: '#6c757d',
+                        precision: 0,
+
+                        callback: function (valor) {
+                          return formatarQuantidade(
+                            valor
+                          );
+                        }
+                      }
+                    },
+
+                    y: {
+                      grid: {
+                        display: false
+                      },
+
+                      ticks: {
+                        color: '#6c757d',
+                        autoSkip: false
+                      }
+                    }
+                  }
+                }
+              }
+            );
+        }
+
+    function criarGraficoRosca(
+      idCanvas,
+      dados,
+      cores,
+      instanciaAtual
+    ) {
+      const canvas =
+        document.getElementById(
+          idCanvas
+        );
+
+      if (
+        !canvas ||
+        !Array.isArray(dados) ||
+        dados.length === 0
+      ) {
+        return null;
+      }
+
+      destruirGraficoExistente(
+        canvas,
+        instanciaAtual
+      );
+
+      return new Chart(
+        canvas,
+        {
+          type: 'doughnut',
+
+          data: {
+            labels:
+              dados.map(
+                function (item) {
+                  return String(
+                    item.label || ''
+                  );
+                }
+              ),
+
+            datasets: [
+              {
+                data:
+                  dados.map(
+                    function (item) {
+                      return (
+                        normalizarNumeroOuNull(
+                          item.total
+                        ) ?? 0
+                      );
+                    }
+                  ),
+
+                backgroundColor:
+                  dados.map(
+                    function (
+                      item,
+                      indice
+                    ) {
+                      return cores[
+                        indice %
+                        cores.length
+                      ];
+                    }
+                  ),
+
+                borderColor: '#ffffff',
+                borderWidth: 3,
+                hoverOffset: 6
+              }
+            ]
+          },
+
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+
+            animation: {
+              duration: 450
+            },
+
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+
+                labels: {
+                  usePointStyle: true,
+                  boxWidth: 9,
+                  padding: 16
+                }
+              },
+
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const valores =
+                      context.dataset.data;
+
+                    const total =
+                      valores.reduce(
+                        function (
+                          soma,
+                          valor
+                        ) {
+                          return (
+                            soma +
+                            (
+                              normalizarNumeroOuNull(
+                                valor
+                              ) ?? 0
+                            )
+                          );
+                        },
+                        0
+                      );
+
+                    const valor =
+                      normalizarNumeroOuNull(
+                        context.raw
+                      ) ?? 0;
+
+                    const percentual =
+                      total > 0
+                        ? (
+                            (
+                              valor /
+                              total
+                            ) *
+                            100
+                          ).toLocaleString(
+                            'pt-BR',
+                            {
+                              minimumFractionDigits:
+                                1,
+
+                              maximumFractionDigits:
+                                1
+                            }
+                          )
+                        : '0,0';
+
+                    return (
+                      context.label +
+                      ': ' +
+                      formatarQuantidade(
+                        valor
+                      ) +
+                      ' (' +
+                      percentual +
+                      '%)'
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      );
+    }
+
+    function inicializarGraficosCausas() {
+      graficoCausasResponsabilidade =
+        criarGraficoRosca(
+          'graficoCausasResponsabilidade',
+          dadosCausasResponsabilidade,
+          [
+            '#cb2166',
+            '#660099'
+          ],
+          graficoCausasResponsabilidade
+        );
+
+      graficoCausasPrioridade =
+        criarGraficoRosca(
+          'graficoCausasPrioridade',
+          dadosCausasPrioridade,
+          [
+            '#0066ff',
+            '#ff9200',
+            '#660099'
+          ],
+          graficoCausasPrioridade
+        );
+    }
+
+    function aplicarMascaraPeriodo() {
+      const inputPeriodo =
+        document.getElementById(
+          'periodo'
+        );
+
+      if (!inputPeriodo) {
+        return;
+      }
+
+      inputPeriodo.addEventListener(
+        'input',
+        function () {
+          let valor =
+            String(
+              inputPeriodo.value || ''
+            )
+              .replace(/\D/g, '')
+              .slice(0, 6);
+
+          if (valor.length > 2) {
+            valor =
+              valor.slice(0, 2) +
+              '/' +
+              valor.slice(2);
+          }
+
+          inputPeriodo.value = valor;
+        }
+      );
+    }
+
+    function aplicarMascaraDdd() {
+      const inputDdd =
+        document.getElementById(
+          'ddd'
+        );
+
+      if (!inputDdd) {
+        return;
+      }
+
+      inputDdd.addEventListener(
+        'input',
+        function () {
+          inputDdd.value =
+            String(
+              inputDdd.value || ''
+            )
+              .replace(/\D/g, '')
+              .slice(0, 2);
+        }
+      );
+    }
+
+    function validarFormularioFiltros() {
+      const formulario =
+        document.getElementById(
+          'filtros-inline'
+        );
+
+      const inputPeriodo =
+        document.getElementById(
+          'periodo'
+        );
+
+      if (
+        !formulario ||
+        !inputPeriodo
+      ) {
+        return;
+      }
+
+      formulario.addEventListener(
+        'submit',
+        function (evento) {
+          const periodo =
+            String(
+              inputPeriodo.value || ''
+            ).trim();
+
+          if (
+            periodo &&
+            !/^(0[1-9]|1[0-2])\/\d{4}$/.test(
+              periodo
+            )
+          ) {
+            evento.preventDefault();
+
+            inputPeriodo.setCustomValidity(
+              'Informe um período válido no formato MM/AAAA.'
+            );
+
+            inputPeriodo.reportValidity();
+            inputPeriodo.focus();
+
+            return;
+          }
+
+          inputPeriodo.setCustomValidity(
+            ''
+          );
+        }
+      );
+
+      inputPeriodo.addEventListener(
+        'input',
+        function () {
+          inputPeriodo.setCustomValidity(
+            ''
+          );
+        }
+      );
+    }
+
+    function inicializarDashboardBaseline() {
+      aplicarMascaraPeriodo();
+      aplicarMascaraDdd();
+      validarFormularioFiltros();
+
+      if (
+        typeof Chart === 'undefined'
+      ) {
+        console.error(
+          '[Guardião Baseline] Chart.js não foi carregado.'
+        );
+
+        return;
+      }
+
+      inicializarGraficoEvolucao();
+      inicializarGraficoRankingUf();
+      inicializarGraficoRankingDdd();
+      inicializarGraficoGapUf();
+      inicializarGraficoTipoFalha();
+      inicializarGraficosCausas();
+    }
+
+    if (
+      document.readyState ===
+      'loading'
+    ) {
+      document.addEventListener(
+        'DOMContentLoaded',
+        inicializarDashboardBaseline,
+        {
+          once: true
+        }
+      );
+    } else {
+      inicializarDashboardBaseline();
+    }
+  })();
+</script>
+
+<script>
+  /* ============================================================
+     MODAL DE JUSTIFICATIVA
+  ============================================================ */
+  (function () {
+    'use strict';
+
+    const JUSTIFICATIVA_PADRAO =
+      'Não Justificado';
+
+    const TITULO_MODAL =
+      'Justificativa de Perda de Prazo do TA';
+
+    const modal =
+      document.getElementById(
+        'modalJustificativa'
+      );
+
+    const formulario =
+      document.getElementById(
+        'formJustificativa'
+      );
+
+    if (
+      !modal ||
+      !formulario
+    ) {
+      return;
+    }
+
+    const titulo =
+      document.getElementById(
+        'modalJustificativaTitulo'
+      );
+
+    const campoId =
+      document.getElementById(
+        'modalJustificativaId'
+      );
+
+    const campoJustificativa =
+      document.getElementById(
+        'modalJustificativaCampo'
+      );
+
+    const campoDescricao =
+      document.getElementById(
+        'modalDescricaoCampo'
+      );
+
+    const caixaErro =
+      document.getElementById(
+        'modalJustificativaErro'
+      );
+
+    const botaoSalvar =
+      document.getElementById(
+        'modalJustificativaSalvar'
+      );
+
+    const csrfToken =
+      formulario.dataset.csrf || '';
+
+    /*
+     * Chave = nome no dataset do botão do evento
+     * Valor = id do campo somente leitura no modal
+     */
+    const camposInformacao = {
+      evento: 'modalInfoEvento',
+      tipoFalha: 'modalInfoTipoFalha',
+      uf: 'modalInfoUf',
+      prioridade: 'modalInfoPrioridade',
+      municipio: 'modalInfoMunicipio',
+      responsabilidade: 'modalInfoResponsabilidade',
+      ddd: 'modalInfoDdd',
+      dia: 'modalInfoDia',
+      sigla: 'modalInfoSigla'
+    };
+
+    let botaoOrigem = null;
+    let salvando = false;
+
+    function preencherInformacoes(botao) {
+      Object.keys(
+        camposInformacao
+      ).forEach(
+        function (chave) {
+          const elemento =
+            document.getElementById(
+              camposInformacao[chave]
+            );
+
+          if (!elemento) {
+            return;
+          }
+
+          const valor =
+            String(
+              botao.dataset[chave] || ''
+            ).trim();
+
+          elemento.textContent =
+            valor || '-';
+
+          elemento.title =
+            valor;
+        }
+      );
+    }
+
+    function selecionarJustificativa(valor) {
+      const valorFinal =
+        String(
+          valor || ''
+        ).trim() ||
+        JUSTIFICATIVA_PADRAO;
+
+      const existe =
+        Array.prototype.some.call(
+          campoJustificativa.options,
+          function (opcao) {
+            return opcao.value === valorFinal;
+          }
+        );
+
+      if (!existe) {
+        const novaOpcao =
+          document.createElement(
+            'option'
+          );
+
+        novaOpcao.value =
+          valorFinal;
+
+        novaOpcao.textContent =
+          valorFinal;
+
+        campoJustificativa.appendChild(
+          novaOpcao
+        );
+      }
+
+      campoJustificativa.value =
+        valorFinal;
+    }
+
+    function mostrarErro(mensagem) {
+      caixaErro.textContent =
+        mensagem || '';
+
+      caixaErro.hidden =
+        !mensagem;
+    }
+
+    function definirSalvando(ativo) {
+      salvando = ativo;
+      botaoSalvar.disabled = ativo;
+
+      botaoSalvar.querySelector(
+        'span'
+      ).textContent =
+        ativo
+          ? 'Salvando...'
+          : 'Salvar';
+    }
+
+    function abrirModal(botao) {
+      botaoOrigem = botao;
+
+      const evento =
+        String(
+          botao.dataset.evento || ''
+        ).trim();
+
+      titulo.textContent =
+        evento
+          ? TITULO_MODAL + ' ' + evento
+          : TITULO_MODAL;
+
+      campoId.value =
+        botao.dataset.id || '';
+
+      preencherInformacoes(
+        botao
+      );
+
+      selecionarJustificativa(
+        botao.dataset.justificativa
+      );
+
+      campoDescricao.value =
+        botao.dataset.descricao || '';
+
+      mostrarErro('');
+      definirSalvando(false);
+
+      modal.hidden = false;
+
+      document.body.classList.add(
+        'baseline-modal-aberto'
+      );
+
+      campoJustificativa.focus();
+    }
+
+    function fecharModal() {
+      if (salvando) {
+        return;
+      }
+
+      modal.hidden = true;
+
+      document.body.classList.remove(
+        'baseline-modal-aberto'
+      );
+
+      if (botaoOrigem) {
+        botaoOrigem.focus();
+      }
+
+      botaoOrigem = null;
+    }
+
+    function atualizarLinha(
+      id,
+      dados
+    ) {
+      const linha =
+        document.querySelector(
+          'tr[data-causa-id="' +
+          CSS.escape(String(id)) +
+          '"]'
+        );
+
+      if (!linha) {
+        return;
+      }
+
+      const justificativa =
+        dados.justificativas || '';
+
+      const descricao =
+        dados.descricao_justificativa || '';
+
+      const celulaJustificativa =
+        linha.querySelector(
+          '.js-celula-justificativa'
+        );
+
+      const celulaDescricao =
+        linha.querySelector(
+          '.js-celula-descricao'
+        );
+
+      const botao =
+        linha.querySelector(
+          '.js-editar-justificativa'
+        );
+
+      if (celulaJustificativa) {
+        celulaJustificativa.textContent =
+          justificativa || '-';
+      }
+
+      if (celulaDescricao) {
+        celulaDescricao.textContent =
+          descricao || '-';
+      }
+
+      if (botao) {
+        botao.dataset.justificativa =
+          justificativa;
+
+        botao.dataset.descricao =
+          descricao;
+      }
+
+      linha.classList.remove(
+        'baseline-linha-atualizada'
+      );
+
+      void linha.offsetWidth;
+
+      linha.classList.add(
+        'baseline-linha-atualizada'
+      );
+    }
+
+    async function lerRespostaJson(resposta) {
+      const tipo =
+        resposta.headers.get(
+          'content-type'
+        ) || '';
+
+      if (
+        !tipo.includes(
+          'application/json'
+        )
+      ) {
+        return null;
+      }
+
+      try {
+        return await resposta.json();
+      } catch (erro) {
+        return null;
+      }
+    }
+
+    async function salvarJustificativa(evento) {
+      evento.preventDefault();
+
+      if (salvando) {
+        return;
+      }
+
+      const id =
+        campoId.value;
+
+      mostrarErro('');
+      definirSalvando(true);
+
+      try {
+        const resposta =
+          await fetch(
+            '/guardiao-baseline/causas/' +
+            encodeURIComponent(id),
+            {
+              method: 'PUT',
+              credentials: 'same-origin',
+
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+              },
+
+              body: JSON.stringify({
+                justificativas:
+                  campoJustificativa.value,
+
+                descricao_justificativa:
+                  campoDescricao.value.trim()
+              })
+            }
+          );
+
+        const corpo =
+          await lerRespostaJson(
+            resposta
+          );
+
+        if (
+          !resposta.ok ||
+          !corpo ||
+          !corpo.success
+        ) {
+          mostrarErro(
+            (corpo && corpo.message) ||
+            'Não foi possível salvar (HTTP ' +
+            resposta.status +
+            ').'
+          );
+
+          definirSalvando(false);
+
+          return;
+        }
+
+        atualizarLinha(
+          id,
+          corpo.data || {}
+        );
+
+        definirSalvando(false);
+        fecharModal();
+      } catch (erro) {
+        console.error(
+          '[Guardião Baseline] Erro ao salvar justificativa.',
+          erro
+        );
+
+        mostrarErro(
+          'Falha de conexão ao salvar. Verifique a rede e tente novamente.'
+        );
+
+        definirSalvando(false);
+      }
+    }
+
+    document.addEventListener(
+      'click',
+      function (evento) {
+        const botaoEditar =
+          evento.target.closest(
+            '.js-editar-justificativa'
+          );
+
+        if (botaoEditar) {
+          abrirModal(
+            botaoEditar
+          );
+
+          return;
+        }
+
+        if (
+          !modal.hidden &&
+          evento.target.closest(
+            '[data-fechar-modal]'
+          )
+        ) {
+          fecharModal();
+        }
+      }
+    );
+
+    document.addEventListener(
+      'keydown',
+      function (evento) {
+        if (modal.hidden) {
+          return;
+        }
+
+        if (
+          evento.key === 'Escape'
+        ) {
+          fecharModal();
+
+          return;
+        }
+
+        if (
+          evento.key !== 'Tab'
+        ) {
+          return;
+        }
+
+        const focaveis =
+          modal.querySelectorAll(
+            'button:not([disabled]), select, textarea'
+          );
+
+        if (
+          focaveis.length === 0
+        ) {
+          return;
+        }
+
+        const primeiro =
+          focaveis[0];
+
+        const ultimo =
+          focaveis[
+            focaveis.length - 1
+          ];
+
+        if (
+          evento.shiftKey &&
+          document.activeElement === primeiro
+        ) {
+          evento.preventDefault();
+          ultimo.focus();
+        } else if (
+          !evento.shiftKey &&
+          document.activeElement === ultimo
+        ) {
+          evento.preventDefault();
+          primeiro.focus();
+        }
+      }
+    );
+
+    formulario.addEventListener(
+      'submit',
+      salvarJustificativa
+    );
+  })();
+</script>
+@endsection
