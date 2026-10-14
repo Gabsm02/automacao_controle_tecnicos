@@ -36,6 +36,18 @@ const LIMITE_BUSCA = 200
 const LIMITE_JUSTIFICATIVA = 255
 const LIMITE_DESCRICAO_JUSTIFICATIVA = 2000
 
+/*
+ * Opções do dropdown de justificativa no modal.
+ * Para incluir uma nova opção, basta adicionar uma linha aqui.
+ * O texto é gravado exatamente assim no banco.
+ */
+const JUSTIFICATIVAS_OPCOES = [
+  'Não Justificado',
+  'Opção 1',
+  'Opção 2',
+  'Opção 3',
+]
+
 type UfValida =
   (typeof UFS_VALIDAS)[number]
 
@@ -408,7 +420,7 @@ function calcularMedia(
 function calcularSoma(
   valores: unknown[]
 ): number {
-  return valores.reduce(
+  return valores.reduce<number>(
     (
       acumulador:
         number,
@@ -1329,6 +1341,13 @@ export default class GuardiaoBaselineController {
                   dia,
                   '%d/%m/%Y'
                 ) AS dia_formatado
+              `),
+
+              conn.raw(`
+                DATE_FORMAT(
+                  dia,
+                  '%Y-%m-%d'
+                ) AS dia_iso
               `),
 
               conn.raw(`
@@ -2331,6 +2350,10 @@ export default class GuardiaoBaselineController {
           ufCritica,
           melhorDdd,
           dddCritico,
+
+          opcoesJustificativa: [
+            ...JUSTIFICATIVAS_OPCOES,
+          ],
         }
       )
     } catch (
@@ -2441,7 +2464,8 @@ export default class GuardiaoBaselineController {
             'causa_ofensora'
           )
           .select(
-            'id'
+            'id',
+            'justificativas'
           )
           .where(
             'id',
@@ -2457,6 +2481,34 @@ export default class GuardiaoBaselineController {
 
             message:
               'Causa ofensora não encontrada.',
+          })
+      }
+
+      /*
+       * Aceita apenas opções da lista.
+       * O valor que já estava gravado na causa também é aceito,
+       * para não travar o salvamento de registros antigos.
+       */
+      const justificativaAtual =
+        normalizarTexto(
+          causaExistente.justificativas
+        )
+
+      if (
+        justificativa.valor &&
+        !JUSTIFICATIVAS_OPCOES.includes(
+          justificativa.valor
+        ) &&
+        justificativa.valor !==
+          justificativaAtual
+      ) {
+        return response
+          .status(422)
+          .send({
+            success: false,
+
+            message:
+              'Justificativa inválida. Selecione uma opção da lista.',
           })
       }
 
@@ -2476,8 +2528,8 @@ export default class GuardiaoBaselineController {
             descricao.valor,
 
           atualizado_em:
-            conn.raw(
-              'NOW()'
+            DateTime.local().toFormat(
+              'yyyy-MM-dd HH:mm:ss'
             ),
         })
 
