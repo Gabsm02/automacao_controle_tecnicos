@@ -614,6 +614,202 @@
   }
 }
 
+/* ============================================================
+   MODAL DE JUSTIFICATIVA
+============================================================ */
+
+.baseline-evento-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  color: var(--baseline-primary);
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.baseline-evento-link i {
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.baseline-evento-link:hover,
+.baseline-evento-link:focus-visible {
+  color: var(--baseline-pink);
+  text-decoration: underline;
+}
+
+.baseline-evento-link:hover i,
+.baseline-evento-link:focus-visible i {
+  opacity: 1;
+}
+
+.baseline-evento-link:focus-visible {
+  outline: 2px solid var(--baseline-pink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.baseline-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.baseline-modal[hidden] {
+  display: none;
+}
+
+.baseline-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(33, 0, 50, 0.55);
+}
+
+.baseline-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 20px 50px rgba(33, 0, 50, 0.35);
+  animation: baseline-modal-entrada 0.18s ease-out;
+}
+
+@keyframes baseline-modal-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.baseline-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  color: #ffffff;
+  background:
+    linear-gradient(
+      135deg,
+      var(--baseline-primary) 0%,
+      var(--baseline-pink) 100%
+    );
+}
+
+.baseline-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.baseline-modal-subtitle {
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.8rem;
+}
+
+.baseline-modal-close {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  color: #ffffff;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.baseline-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.baseline-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.baseline-modal-body textarea.form-control {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.baseline-modal-counter {
+  align-self: flex-end;
+  color: var(--baseline-gray-600);
+  font-size: 0.7rem;
+}
+
+.baseline-modal-error {
+  padding: 0.65rem 0.85rem;
+  color: #842029;
+  border-radius: 6px;
+  background: #f8d7da;
+  font-size: 0.8rem;
+}
+
+.baseline-modal-error[hidden] {
+  display: none;
+}
+
+.baseline-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid var(--baseline-gray-200);
+  background: var(--baseline-gray-100);
+}
+
+body.baseline-modal-aberto {
+  overflow: hidden;
+}
+
+.baseline-linha-atualizada > td {
+  animation: baseline-linha-destaque 1.6s ease-out;
+}
+
+@keyframes baseline-linha-destaque {
+  from {
+    background-color: rgba(99, 214, 0, 0.22);
+  }
+
+  to {
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .baseline-modal-dialog,
+  .baseline-linha-atualizada > td {
+    animation: none;
+  }
+}
+
 </style>
 
 <link rel="stylesheet" href="/css/bootstrap-select.min.css">
@@ -1739,15 +1935,30 @@
 
         <tbody>
           @each(causa in causas)
-            <tr>
+            <tr data-causa-id="{{ causa.id }}">
               <td class="baseline-table-nowrap">
                 {{ causa.dia_formatado || causa.dia || '-' }}
               </td>
 
               <td class="baseline-table-nowrap">
-                <strong>
-                  {{ causa.evento || '-' }}
-                </strong>
+                <button
+                  type="button"
+                  class="baseline-evento-link js-editar-justificativa"
+                  data-id="{{ causa.id }}"
+                  data-evento="{{ causa.evento || '' }}"
+                  data-justificativa="{{ causa.justificativas || '' }}"
+                  data-descricao="{{ causa.descricao_justificativa || '' }}"
+                  title="Editar justificativa e descrição"
+                >
+                  <strong>
+                    {{ causa.evento || '-' }}
+                  </strong>
+
+                  <i
+                    class="fa fa-pen"
+                    aria-hidden="true"
+                  ></i>
+                </button>
               </td>
 
               <td class="baseline-table-failure">
@@ -1804,11 +2015,11 @@
                 @endif
               </td>
 
-              <td>
+              <td class="js-celula-justificativa">
                 {{ causa.justificativas || '-' }}
               </td>
 
-              <td class="baseline-table-description">
+              <td class="baseline-table-description js-celula-descricao">
                 {{ causa.descricao_justificativa || '-' }}
               </td>
             </tr>
@@ -1937,6 +2148,138 @@
     @endif
   </nav>
 @endif
+
+{{-- ============================================================
+     MODAL DE JUSTIFICATIVA
+     Aberto ao clicar no evento da tabela de causas.
+     Salva via PUT /guardiao-baseline/causas/:id
+============================================================ --}}
+<div
+  id="modalJustificativa"
+  class="baseline-modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modalJustificativaTitulo"
+  hidden
+>
+  <div
+    class="baseline-modal-backdrop"
+    data-fechar-modal
+  ></div>
+
+  <div class="baseline-modal-dialog">
+    <form
+      id="formJustificativa"
+      data-csrf="{{ csrfToken || '' }}"
+      novalidate
+    >
+      <div class="baseline-modal-header">
+        <div>
+          <h2
+            id="modalJustificativaTitulo"
+            class="baseline-modal-title"
+          >
+            <i
+              class="fa fa-edit"
+              aria-hidden="true"
+            ></i>
+
+            <span>Editar justificativa</span>
+          </h2>
+
+          <div class="baseline-modal-subtitle">
+            Evento
+            <strong id="modalJustificativaEvento">-</strong>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="baseline-modal-close"
+          data-fechar-modal
+          aria-label="Fechar"
+        >
+          &times;
+        </button>
+      </div>
+
+      <div class="baseline-modal-body">
+        <input
+          type="hidden"
+          id="modalJustificativaId"
+        >
+
+        <div class="baseline-filter-group">
+          <label for="modalJustificativaCampo">
+            Justificativa
+          </label>
+
+          <textarea
+            id="modalJustificativaCampo"
+            name="justificativas"
+            class="form-control"
+            rows="2"
+            maxlength="255"
+          ></textarea>
+
+          <small
+            class="baseline-modal-counter"
+            data-contador-para="modalJustificativaCampo"
+          ></small>
+        </div>
+
+        <div class="baseline-filter-group">
+          <label for="modalDescricaoCampo">
+            Descrição da justificativa
+          </label>
+
+          <textarea
+            id="modalDescricaoCampo"
+            name="descricao_justificativa"
+            class="form-control"
+            rows="6"
+            maxlength="2000"
+          ></textarea>
+
+          <small
+            class="baseline-modal-counter"
+            data-contador-para="modalDescricaoCampo"
+          ></small>
+        </div>
+
+        <div
+          id="modalJustificativaErro"
+          class="baseline-modal-error"
+          role="alert"
+          hidden
+        ></div>
+      </div>
+
+      <div class="baseline-modal-footer">
+        <button
+          type="button"
+          class="btn baseline-btn-clear"
+          data-fechar-modal
+        >
+          <span>Cancelar</span>
+        </button>
+
+        <button
+          type="submit"
+          id="modalJustificativaSalvar"
+          class="btn baseline-btn-search"
+        >
+          <i
+            class="fa fa-save"
+            aria-hidden="true"
+          ></i>
+
+          <span>Salvar</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
   (function () {
@@ -3309,6 +3652,432 @@ function obterCorGap(valor) {
     } else {
       inicializarDashboardBaseline();
     }
+  })();
+</script>
+
+<script>
+  /* ============================================================
+     MODAL DE JUSTIFICATIVA
+  ============================================================ */
+  (function () {
+    'use strict';
+
+    const modal =
+      document.getElementById(
+        'modalJustificativa'
+      );
+
+    const formulario =
+      document.getElementById(
+        'formJustificativa'
+      );
+
+    if (
+      !modal ||
+      !formulario
+    ) {
+      return;
+    }
+
+    const campoId =
+      document.getElementById(
+        'modalJustificativaId'
+      );
+
+    const campoEvento =
+      document.getElementById(
+        'modalJustificativaEvento'
+      );
+
+    const campoJustificativa =
+      document.getElementById(
+        'modalJustificativaCampo'
+      );
+
+    const campoDescricao =
+      document.getElementById(
+        'modalDescricaoCampo'
+      );
+
+    const caixaErro =
+      document.getElementById(
+        'modalJustificativaErro'
+      );
+
+    const botaoSalvar =
+      document.getElementById(
+        'modalJustificativaSalvar'
+      );
+
+    const csrfToken =
+      formulario.dataset.csrf || '';
+
+    let botaoOrigem = null;
+    let salvando = false;
+
+    function atualizarContador(campo) {
+      const contador =
+        modal.querySelector(
+          '[data-contador-para="' +
+          campo.id +
+          '"]'
+        );
+
+      if (!contador) {
+        return;
+      }
+
+      contador.textContent =
+        campo.value.length +
+        ' / ' +
+        campo.maxLength;
+    }
+
+    function mostrarErro(mensagem) {
+      caixaErro.textContent =
+        mensagem || '';
+
+      caixaErro.hidden =
+        !mensagem;
+    }
+
+    function definirSalvando(ativo) {
+      salvando = ativo;
+      botaoSalvar.disabled = ativo;
+
+      botaoSalvar.querySelector(
+        'span'
+      ).textContent =
+        ativo
+          ? 'Salvando...'
+          : 'Salvar';
+    }
+
+    function abrirModal(botao) {
+      botaoOrigem = botao;
+
+      campoId.value =
+        botao.dataset.id || '';
+
+      campoEvento.textContent =
+        botao.dataset.evento || '-';
+
+      campoJustificativa.value =
+        botao.dataset.justificativa || '';
+
+      campoDescricao.value =
+        botao.dataset.descricao || '';
+
+      atualizarContador(
+        campoJustificativa
+      );
+
+      atualizarContador(
+        campoDescricao
+      );
+
+      mostrarErro('');
+      definirSalvando(false);
+
+      modal.hidden = false;
+
+      document.body.classList.add(
+        'baseline-modal-aberto'
+      );
+
+      campoJustificativa.focus();
+    }
+
+    function fecharModal() {
+      if (salvando) {
+        return;
+      }
+
+      modal.hidden = true;
+
+      document.body.classList.remove(
+        'baseline-modal-aberto'
+      );
+
+      if (botaoOrigem) {
+        botaoOrigem.focus();
+      }
+
+      botaoOrigem = null;
+    }
+
+    function atualizarLinha(
+      id,
+      dados
+    ) {
+      const linha =
+        document.querySelector(
+          'tr[data-causa-id="' +
+          CSS.escape(String(id)) +
+          '"]'
+        );
+
+      if (!linha) {
+        return;
+      }
+
+      const justificativa =
+        dados.justificativas || '';
+
+      const descricao =
+        dados.descricao_justificativa || '';
+
+      const celulaJustificativa =
+        linha.querySelector(
+          '.js-celula-justificativa'
+        );
+
+      const celulaDescricao =
+        linha.querySelector(
+          '.js-celula-descricao'
+        );
+
+      const botao =
+        linha.querySelector(
+          '.js-editar-justificativa'
+        );
+
+      if (celulaJustificativa) {
+        celulaJustificativa.textContent =
+          justificativa || '-';
+      }
+
+      if (celulaDescricao) {
+        celulaDescricao.textContent =
+          descricao || '-';
+      }
+
+      if (botao) {
+        botao.dataset.justificativa =
+          justificativa;
+
+        botao.dataset.descricao =
+          descricao;
+      }
+
+      linha.classList.remove(
+        'baseline-linha-atualizada'
+      );
+
+      void linha.offsetWidth;
+
+      linha.classList.add(
+        'baseline-linha-atualizada'
+      );
+    }
+
+    async function lerRespostaJson(resposta) {
+      const tipo =
+        resposta.headers.get(
+          'content-type'
+        ) || '';
+
+      if (
+        !tipo.includes(
+          'application/json'
+        )
+      ) {
+        return null;
+      }
+
+      try {
+        return await resposta.json();
+      } catch (erro) {
+        return null;
+      }
+    }
+
+    async function salvarJustificativa(evento) {
+      evento.preventDefault();
+
+      if (salvando) {
+        return;
+      }
+
+      const id =
+        campoId.value;
+
+      mostrarErro('');
+      definirSalvando(true);
+
+      try {
+        const resposta =
+          await fetch(
+            '/guardiao-baseline/causas/' +
+            encodeURIComponent(id),
+            {
+              method: 'PUT',
+              credentials: 'same-origin',
+
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+              },
+
+              body: JSON.stringify({
+                justificativas:
+                  campoJustificativa.value.trim(),
+
+                descricao_justificativa:
+                  campoDescricao.value.trim()
+              })
+            }
+          );
+
+        const corpo =
+          await lerRespostaJson(
+            resposta
+          );
+
+        if (
+          !resposta.ok ||
+          !corpo ||
+          !corpo.success
+        ) {
+          mostrarErro(
+            (corpo && corpo.message) ||
+            'Não foi possível salvar (HTTP ' +
+            resposta.status +
+            ').'
+          );
+
+          definirSalvando(false);
+
+          return;
+        }
+
+        atualizarLinha(
+          id,
+          corpo.data || {}
+        );
+
+        definirSalvando(false);
+        fecharModal();
+      } catch (erro) {
+        console.error(
+          '[Guardião Baseline] Erro ao salvar justificativa.',
+          erro
+        );
+
+        mostrarErro(
+          'Falha de conexão ao salvar. Verifique a rede e tente novamente.'
+        );
+
+        definirSalvando(false);
+      }
+    }
+
+    document.addEventListener(
+      'click',
+      function (evento) {
+        const botaoEditar =
+          evento.target.closest(
+            '.js-editar-justificativa'
+          );
+
+        if (botaoEditar) {
+          abrirModal(
+            botaoEditar
+          );
+
+          return;
+        }
+
+        if (
+          !modal.hidden &&
+          evento.target.closest(
+            '[data-fechar-modal]'
+          )
+        ) {
+          fecharModal();
+        }
+      }
+    );
+
+    document.addEventListener(
+      'keydown',
+      function (evento) {
+        if (modal.hidden) {
+          return;
+        }
+
+        if (
+          evento.key === 'Escape'
+        ) {
+          fecharModal();
+
+          return;
+        }
+
+        if (
+          evento.key !== 'Tab'
+        ) {
+          return;
+        }
+
+        const focaveis =
+          modal.querySelectorAll(
+            'button:not([disabled]), textarea, input:not([type="hidden"])'
+          );
+
+        if (
+          focaveis.length === 0
+        ) {
+          return;
+        }
+
+        const primeiro =
+          focaveis[0];
+
+        const ultimo =
+          focaveis[
+            focaveis.length - 1
+          ];
+
+        if (
+          evento.shiftKey &&
+          document.activeElement === primeiro
+        ) {
+          evento.preventDefault();
+          ultimo.focus();
+        } else if (
+          !evento.shiftKey &&
+          document.activeElement === ultimo
+        ) {
+          evento.preventDefault();
+          primeiro.focus();
+        }
+      }
+    );
+
+    campoJustificativa.addEventListener(
+      'input',
+      function () {
+        atualizarContador(
+          campoJustificativa
+        );
+      }
+    );
+
+    campoDescricao.addEventListener(
+      'input',
+      function () {
+        atualizarContador(
+          campoDescricao
+        );
+      }
+    );
+
+    formulario.addEventListener(
+      'submit',
+      salvarJustificativa
+    );
   })();
 </script>
 @endsection
