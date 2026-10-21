@@ -1,3 +1,6 @@
+import re
+from datetime import datetime
+
 import pandas as pd
 import streamlit as st
 import plotly.express as px
@@ -40,6 +43,17 @@ ESCALA_VIVO = [
     [0.88, "#6E00A7"],
     [1.00, "#400056"],
 ]
+
+
+# Status da força de trabalho: (fundo da célula, texto, cor do gráfico)
+CORES_PRESENCA = {
+    "ATIVO": ("#DCFCE7", "#166534", "#16A34A"),
+    "SOBRE AVISO": ("#FEF3C7", "#92400E", "#F59E0B"),
+    "BH": ("#E9D5FF", VIVO_ROXO_ESCURO, VIVO_LILAS),
+    "FOLGA": ("#F3F4F6", "#4B5563", "#9CA3AF"),
+    "FÉRIAS": ("#DBEAFE", "#1E40AF", "#3B82F6"),
+    "ATESTADO": ("#FEE2E2", "#991B1B", "#DC2626"),
+}
 
 
 # =========================================================
@@ -207,6 +221,84 @@ def normalizar_nome(texto):
     return texto
 
 
+def formatar_moeda(valor):
+
+    return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def formatar_numero(valor, casas=2):
+
+    return f"{valor:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+@st.cache_data
+def carregar_caderno():
+
+    # A aba "Planilha1" relaciona cada Tipo da Base_Final com sua
+    # pontuação e valor. Tipos marcados como "NA" não pontuam.
+    df = pd.read_excel(
+        "Caderno B2B_tempo.xlsx",
+        sheet_name="Planilha1",
+        engine="openpyxl",
+    )
+
+    df.columns = df.columns.astype(str).str.strip()
+
+    df["CHAVE_TIPO"] = df["Tipo"].apply(normalizar_nome)
+    df["Pontuação"] = pd.to_numeric(df["PONTUAÇÃO"], errors="coerce").fillna(0)
+    df["Valor"] = pd.to_numeric(df["VALOR"], errors="coerce").fillna(0)
+
+    return (
+        df[df["CHAVE_TIPO"] != ""]
+        .drop_duplicates("CHAVE_TIPO")[["Tipo", "CHAVE_TIPO", "Pontuação", "Valor"]]
+        .reset_index(drop=True)
+    )
+
+
+@st.cache_data
+def carregar_presenca():
+
+    # Converte a matriz Nome x Data da força de trabalho em uma linha
+    # por técnico e dia. Alguns cabeçalhos vêm como "07/10/20262",
+    # por isso a data é extraída por expressão regular.
+    df = carregar_forca_trabalho()
+
+    df = df[df["Nome"].notna()].copy()
+
+    colunas_data = {}
+
+    for coluna in df.columns:
+
+        if isinstance(coluna, datetime):
+
+            colunas_data[coluna] = pd.Timestamp(coluna).normalize()
+
+            continue
+
+        encontrado = re.search(r"\d{2}/\d{2}/\d{4}", str(coluna))
+
+        if encontrado:
+
+            colunas_data[coluna] = pd.to_datetime(
+                encontrado.group(), format="%d/%m/%Y"
+            )
+
+    presenca = df.melt(
+        id_vars=["Nome"],
+        value_vars=list(colunas_data),
+        var_name="Coluna",
+        value_name="Presença",
+    )
+
+    presenca["Data"] = presenca["Coluna"].map(colunas_data)
+    presenca["Presença"] = (
+        presenca["Presença"].fillna("").astype(str).str.strip().str.upper()
+    )
+    presenca["CHAVE"] = presenca["Nome"].apply(normalizar_nome)
+
+    return presenca[["CHAVE", "Nome", "Data", "Presença"]]
+
+
 forca_trabalho = carregar_forca_trabalho()
 
 forca_trabalho["CHAVE"] = forca_trabalho["Nome"].apply(normalizar_nome)
@@ -230,6 +322,7 @@ dias_trabalhados = forca_trabalho[["CHAVE", "Dias Trabalhados"]].copy()
 
 colunas_necessarias = [
     "Recurso",
+    "Tipo",
     "Tipo_Padronizado",
     "Status",
     "Data Concluída",
@@ -263,6 +356,7 @@ if colunas_faltando:
 
 colunas_texto = [
     "Recurso",
+    "Tipo",
     "Tipo_Padronizado",
     "Status",
     "Origem",
@@ -285,6 +379,60 @@ for coluna in colunas_texto:
 base["Data Concluída"] = pd.to_datetime(
     base["Data Concluída"], errors="coerce", dayfirst=True
 )
+
+
+# =========================================================
+# 9.1 PONTUACAO E VALOR (CADERNO B2B)
+# =========================================================
+
+try:
+
+    caderno = carregar_caderno()
+
+except Exception as erro:
+
+    st.error(f"Erro ao carregar o Caderno B2B_tempo.xlsx: {erro}")
+
+    st.stop()
+
+
+base["CHAVE"] = base["Recurso"].apply(normalizar_nome)
+
+base["CHAVE_TIPO"] = base["Tipo"].apply(normalizar_nome)
+
+base = base.merge(
+    caderno[["CHAVE_TIPO", "Pontuação", "Valor"]], on="CHAVE_TIPO", how="left"
+).drop(columns=["CHAVE_TIPO"])
+
+# Somente atividades concluídas geram pontuação e valor.
+atividade_concluida = base["Status"].apply(normalizar_nome).eq("CONCLUIDA")
+
+base["Pontuação"] = base["Pontuação"].fillna(0).where(atividade_concluida, 0)
+
+base["Valor"] = base["Valor"].fillna(0).where(atividade_concluida, 0)
+
+
+# =========================================================
+# 9.2 PRESENCA DIARIA (FORCA DE TRABALHO)
+# =========================================================
+
+# COORD, Supervisor e Classificação vêm da Base_Final para que a
+# presença responda aos mesmos filtros do restante do painel.
+cadastro_tecnicos = (
+    base[base["CHAVE"] != ""]
+    .groupby("CHAVE")[["Recurso", "COORD", "Supervisor", "CLASSIFICACAO"]]
+    .first()
+)
+
+presenca = carregar_presenca().merge(
+    cadastro_tecnicos, left_on="CHAVE", right_index=True, how="left"
+)
+
+presenca["Recurso"] = presenca["Recurso"].fillna(presenca["Nome"])
+
+for coluna in ["COORD", "Supervisor", "CLASSIFICACAO"]:
+
+    presenca[coluna] = presenca[coluna].fillna("")
 
 
 # =========================================================
@@ -525,6 +673,58 @@ if periodo and isinstance(periodo, (list, tuple)) and len(periodo) == 2:
 
 
 # =========================================================
+# 24.1 APLICANDO FILTROS NA PRESENCA
+# =========================================================
+
+# Filtros de técnico e de data. Tipo, Origem e Status são atributos
+# da atividade e não se aplicam à presença.
+df_presenca = presenca.copy()
+
+
+if busca_recurso:
+
+    df_presenca = df_presenca[
+        df_presenca["Recurso"].str.contains(busca_recurso, case=False, na=False)
+    ]
+
+
+if tecnicos_selecionados:
+
+    df_presenca = df_presenca[df_presenca["Recurso"].isin(tecnicos_selecionados)]
+
+
+if coord:
+
+    df_presenca = df_presenca[df_presenca["COORD"].isin(coord)]
+
+
+if supervisor:
+
+    df_presenca = df_presenca[df_presenca["Supervisor"].isin(supervisor)]
+
+
+if classificacao:
+
+    df_presenca = df_presenca[df_presenca["CLASSIFICACAO"].isin(classificacao)]
+
+
+if dia_semana:
+
+    df_presenca = df_presenca[
+        df_presenca["Data"].dt.weekday.map(dict(enumerate(ordem_dias))).isin(
+            dia_semana
+        )
+    ]
+
+
+if periodo and isinstance(periodo, (list, tuple)) and len(periodo) == 2:
+
+    df_presenca = df_presenca[
+        (df_presenca["Data"] >= data_inicio) & (df_presenca["Data"] <= data_fim)
+    ]
+
+
+# =========================================================
 # 25. INDICADORES GERAIS
 # =========================================================
 
@@ -582,6 +782,50 @@ with col4:
 with col5:
 
     st.metric("📈 Taxa conclusão", f"{taxa_conclusao:.1f}%")
+
+
+# =========================================================
+# 26.1 CARDS DE PONTUACAO, VALOR E PRESENCA
+# =========================================================
+
+total_pontuacao = df["Pontuação"].sum()
+
+total_valor = df["Valor"].sum()
+
+total_dias_presenca = len(df_presenca[df_presenca["Presença"] != ""])
+
+total_dias_ativo = int(df_presenca["Presença"].eq("ATIVO").sum())
+
+if total_dias_presenca > 0:
+
+    taxa_presenca = (total_dias_ativo / total_dias_presenca) * 100
+
+else:
+
+    taxa_presenca = 0
+
+
+col6, col7, col8 = st.columns(3)
+
+
+with col6:
+
+    st.metric("🏆 Pontuação", formatar_numero(total_pontuacao))
+
+
+with col7:
+
+    st.metric("💰 Valor", formatar_moeda(total_valor))
+
+
+with col8:
+
+    st.metric(
+        "🙋 Presença (força de trabalho)",
+        f"{taxa_presenca:.1f}%",
+        help="Dias com status ATIVO sobre o total de dias registrados "
+        "na aba FORÇA DE TRABALHO, dentro dos filtros selecionados.",
+    )
 
 
 st.divider()
@@ -1251,6 +1495,322 @@ if not df_produtividade.empty:
 else:
     st.info("Não existem atividades com data para calcular a produtividade.")
 
+
+# =========================================================
+# 40.1 PONTUACAO E VALOR POR TECNICO
+# =========================================================
+
+st.divider()
+
+st.subheader("🏆 Pontuação e Valor por Técnico")
+
+st.caption(
+    "Pontuação e valor de cada atividade concluída conforme o Caderno B2B "
+    "(aba Planilha1). Respeita todos os filtros selecionados. As médias por "
+    "dia consideram somente as datas da força de trabalho e os dias ATIVO."
+)
+
+
+df_pontos = df[
+    (df["Recurso"] != "") & ((df["Pontuação"] > 0) | (df["Valor"] > 0))
+].copy()
+
+
+if not df_pontos.empty:
+
+    df_pontos["Data"] = df_pontos["Data Concluída"].dt.normalize()
+
+    pontos_tecnico = (
+        df_pontos.groupby(["Recurso", "CHAVE"])
+        .agg(
+            COORD=("COORD", "first"),
+            **{
+                "Atividades Pontuadas": ("Pontuação", "size"),
+                "Pontuação": ("Pontuação", "sum"),
+                "Valor": ("Valor", "sum"),
+            },
+        )
+        .reset_index()
+    )
+
+    # Dias ATIVO e pontuação somente nas datas cobertas pela força de
+    # trabalho, para que a média diária compare períodos equivalentes.
+    dias_presentes = (
+        df_presenca[df_presenca["Presença"] == "ATIVO"]
+        .groupby("CHAVE")
+        .size()
+        .rename("Dias Presentes")
+    )
+
+    pontos_datas_forca = (
+        df_pontos[df_pontos["Data"].isin(df_presenca["Data"].unique())]
+        .groupby("CHAVE")[["Pontuação", "Valor"]]
+        .sum()
+        .add_suffix(" Datas FT")
+    )
+
+    pontos_tecnico = pontos_tecnico.merge(
+        dias_presentes, left_on="CHAVE", right_index=True, how="left"
+    ).merge(pontos_datas_forca, left_on="CHAVE", right_index=True, how="left")
+
+    dias_validos = pontos_tecnico["Dias Presentes"].where(
+        pontos_tecnico["Dias Presentes"] > 0
+    )
+
+    pontos_tecnico["Pontuação/Dia"] = (
+        pontos_tecnico["Pontuação Datas FT"].fillna(0) / dias_validos
+    ).round(2)
+
+    pontos_tecnico["Valor/Dia"] = (
+        pontos_tecnico["Valor Datas FT"].fillna(0) / dias_validos
+    ).round(2)
+
+    pontos_tecnico = pontos_tecnico.sort_values(
+        ["Pontuação", "Valor"], ascending=[False, False]
+    ).reset_index(drop=True)
+
+    pontos1, pontos2, pontos3, pontos4 = st.columns(4)
+
+    with pontos1:
+
+        st.metric("👷 Técnicos Pontuados", pontos_tecnico["Recurso"].nunique())
+
+    with pontos2:
+
+        st.metric(
+            "📋 Atividades Pontuadas",
+            f"{int(pontos_tecnico['Atividades Pontuadas'].sum()):,}".replace(",", "."),
+        )
+
+    with pontos3:
+
+        st.metric(
+            "🏅 Maior Pontuação",
+            formatar_numero(pontos_tecnico.iloc[0]["Pontuação"]),
+            help=pontos_tecnico.iloc[0]["Recurso"],
+        )
+
+    with pontos4:
+
+        st.metric(
+            "💰 Valor Médio por Técnico",
+            formatar_moeda(pontos_tecnico["Valor"].mean()),
+        )
+
+    pontos_grafico = pontos_tecnico.sort_values("Pontuação", ascending=True)
+
+    fig_pontos = px.bar(
+        pontos_grafico,
+        x="Pontuação",
+        y="Recurso",
+        orientation="h",
+        text="Pontuação",
+        color="Pontuação",
+        color_continuous_scale=ESCALA_VIVO,
+        custom_data=["Valor", "Atividades Pontuadas", "COORD"],
+        labels={"Recurso": "Técnico"},
+    )
+
+    fig_pontos.update_traces(
+        textposition="outside",
+        texttemplate="%{text:.2f}",
+        hovertemplate=(
+            "<b>%{y}</b><br>"
+            "Pontuação: %{x:.2f}<br>"
+            "Valor: R$ %{customdata[0]:,.2f}<br>"
+            "Atividades pontuadas: %{customdata[1]}<br>"
+            "COORD: %{customdata[2]}"
+            "<extra></extra>"
+        ),
+    )
+
+    fig_pontos.update_layout(
+        height=max(400, len(pontos_grafico) * 32),
+        coloraxis_showscale=False,
+        xaxis_title="Pontuação",
+        yaxis_title="Técnico",
+    )
+
+    st.plotly_chart(fig_pontos, use_container_width=True)
+
+    st.dataframe(
+        pontos_tecnico.rename(columns={"Recurso": "Técnico"})[
+            [
+                "Técnico",
+                "COORD",
+                "Atividades Pontuadas",
+                "Pontuação",
+                "Valor",
+                "Dias Presentes",
+                "Pontuação/Dia",
+                "Valor/Dia",
+            ]
+        ],
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Pontuação": st.column_config.NumberColumn(format="%.2f"),
+            "Valor": st.column_config.NumberColumn(format="R$ %.2f"),
+            "Dias Presentes": st.column_config.NumberColumn(format="%d"),
+            "Pontuação/Dia": st.column_config.NumberColumn(format="%.2f"),
+            "Valor/Dia": st.column_config.NumberColumn(format="R$ %.2f"),
+        },
+    )
+
+else:
+
+    st.info("Nenhuma atividade pontuada com os filtros selecionados.")
+
+
+with st.expander("📘 Tabela de pontuação (Caderno B2B)"):
+
+    st.dataframe(
+        caderno[(caderno["Pontuação"] > 0) | (caderno["Valor"] > 0)]
+        .drop(columns=["CHAVE_TIPO"])
+        .sort_values("Valor", ascending=False),
+        use_container_width=True,
+        hide_index=True,
+        column_config={"Valor": st.column_config.NumberColumn(format="R$ %.2f")},
+    )
+
+    st.caption("Tipos marcados como NA no caderno não geram pontuação nem valor.")
+
+
+# =========================================================
+# 40.2 PRESENCA DIARIA
+# =========================================================
+
+st.divider()
+
+st.subheader("🗓️ Presença Diária")
+
+st.caption(
+    "Status diário de cada técnico conforme a aba FORÇA DE TRABALHO da "
+    "PRODUÇÃO B2B-OUTUBRO.xlsx. Quando o técnico pontuou no dia, a "
+    "pontuação aparece ao lado do status."
+)
+
+
+df_presenca_validos = df_presenca[df_presenca["Presença"] != ""].copy()
+
+
+if not df_presenca_validos.empty:
+
+    ativos_por_dia = (
+        df_presenca_validos[df_presenca_validos["Presença"] == "ATIVO"]
+        .groupby("Data")
+        .size()
+        .reindex(df_presenca_validos["Data"].unique(), fill_value=0)
+    )
+
+    presenca1, presenca2, presenca3 = st.columns(3)
+
+    with presenca1:
+
+        st.metric("👷 Técnicos na Força", df_presenca_validos["CHAVE"].nunique())
+
+    with presenca2:
+
+        st.metric("🙋 Média de Presentes/Dia", formatar_numero(ativos_por_dia.mean(), 1))
+
+    with presenca3:
+
+        st.metric("📈 Presença", f"{taxa_presenca:.1f}%")
+
+    resumo_presenca = (
+        df_presenca_validos.groupby(["Data", "Presença"])
+        .size()
+        .reset_index(name="Técnicos")
+    )
+
+    ordem_presenca = list(CORES_PRESENCA) + sorted(
+        set(resumo_presenca["Presença"]) - set(CORES_PRESENCA)
+    )
+
+    fig_presenca = px.bar(
+        resumo_presenca,
+        x="Data",
+        y="Técnicos",
+        color="Presença",
+        text="Técnicos",
+        color_discrete_map={
+            status: cores[2] for status, cores in CORES_PRESENCA.items()
+        },
+        category_orders={"Presença": ordem_presenca},
+    )
+
+    fig_presenca.update_xaxes(tickformat="%d/%m", dtick=86400000)
+
+    fig_presenca.update_layout(
+        xaxis_title="Data",
+        yaxis_title="Técnicos",
+        legend_title="Status",
+    )
+
+    st.plotly_chart(fig_presenca, use_container_width=True)
+
+    # Matriz técnico x data com o status e a pontuação do dia
+    pontos_dia = (
+        df[df["Pontuação"] > 0]
+        .assign(Data=df["Data Concluída"].dt.normalize())
+        .groupby(["CHAVE", "Data"])["Pontuação"]
+        .sum()
+        .reset_index()
+    )
+
+    matriz_presenca = df_presenca_validos.merge(
+        pontos_dia, on=["CHAVE", "Data"], how="left"
+    )
+
+    matriz_presenca["Célula"] = matriz_presenca["Presença"] + matriz_presenca[
+        "Pontuação"
+    ].apply(
+        lambda pontos: (
+            f" · {formatar_numero(pontos)} pts" if pd.notna(pontos) and pontos > 0 else ""
+        )
+    )
+
+    tabela_presenca = matriz_presenca.pivot_table(
+        index="Recurso",
+        columns="Data",
+        values="Célula",
+        aggfunc="first",
+    ).sort_index(axis=1)
+
+    tabela_presenca.columns = [data.strftime("%d/%m") for data in tabela_presenca.columns]
+
+    colunas_dias_presenca = list(tabela_presenca.columns)
+
+    tabela_presenca = tabela_presenca.fillna("")
+
+    tabela_presenca["Dias ATIVO"] = (
+        tabela_presenca[colunas_dias_presenca]
+        .apply(lambda coluna: coluna.str.startswith("ATIVO"))
+        .sum(axis=1)
+    )
+
+    tabela_presenca.index.name = "Técnico"
+
+    def estilo_presenca(celula):
+
+        cores = CORES_PRESENCA.get(str(celula).split(" · ")[0])
+
+        if not cores:
+            return ""
+
+        return f"background-color: {cores[0]}; color: {cores[1]};"
+
+    st.dataframe(
+        tabela_presenca.style.map(estilo_presenca, subset=colunas_dias_presenca),
+        use_container_width=True,
+        height=min(900, 35 * (len(tabela_presenca) + 1) + 3),
+    )
+
+else:
+
+    st.info("Nenhum registro de presença para os filtros selecionados.")
+
+
 # =========================================================
 # 41. DETALHAMENTO OPERACIONAL
 # =========================================================
@@ -1263,7 +1823,7 @@ st.subheader("📋 Detalhamento Operacional")
 st.caption(f"{len(df)} registros encontrados " "com os filtros selecionados.")
 
 
-df_exibicao = df.copy()
+df_exibicao = df.drop(columns=["CHAVE"]).copy()
 
 
 # =========================================================

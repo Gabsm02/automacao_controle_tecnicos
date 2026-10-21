@@ -25,6 +25,8 @@ O projeto permite acompanhar:
 - Atividades por classificação
 - Atividades por dia da semana
 - Quantidade diária de atividades por técnico
+- Pontuação e valor por técnico (Caderno B2B)
+- Presença diária dos técnicos (força de trabalho)
 
 ---
 
@@ -98,7 +100,29 @@ O painel apresenta indicadores como:
 - ⏳ Outros status
 - 📈 Taxa de conclusão
 
+- 🏆 Pontuação
+- 💰 Valor
+- 🙋 Presença (força de trabalho)
+
 Todos os indicadores são atualizados automaticamente conforme os filtros selecionados.
+
+---
+
+## 🏆 Pontuação e Valor
+
+A pontuação e o valor de cada atividade vêm da aba `Planilha1` do arquivo `Caderno B2B_tempo.xlsx`, relacionando a coluna `Tipo` da `Base_Final.xlsx` (sem diferenciar maiúsculas e acentos).
+
+- Somente atividades com status `Concluída` pontuam
+- Tipos marcados como `NA` no caderno não geram pontuação nem valor
+- A média por dia (`Pontuação/Dia` e `Valor/Dia`) considera as datas da força de trabalho e os dias com status `ATIVO`
+
+---
+
+## 🗓️ Presença Diária
+
+A presença vem da aba `FORÇA DE TRABALHO` do arquivo `PRODUÇÃO B2B-OUTUBRO.xlsx`.
+
+O painel mostra a quantidade de técnicos por status em cada dia (ATIVO, FOLGA, FÉRIAS, ATESTADO, SOBRE AVISO, BH) e uma matriz técnico x data com o status do dia e a pontuação obtida.
 
 ---
 
@@ -133,4 +157,6 @@ automacao_controle_tecnicos/
 ├── BASE TOA.xlsx
 ├── BASE ETA.xlsx
 ├── tbDEPARA.xlsx
-└── Base_Final.xlsx
+├── Base_Final.xlsx
+├── Caderno B2B_tempo.xlsx
+└── PRODUÇÃO B2B-OUTUBRO.xlsx
