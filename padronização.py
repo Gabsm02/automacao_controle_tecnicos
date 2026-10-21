@@ -127,6 +127,7 @@ MAPEAMENTO_TIPOS = {
     "Construção de rede para B2B/Site até 300m": "Construção",
     "Construção de rede para B2B/Site até 300m (Serviço Duplado)": "Construção",
     "INS Rede Lançamento": "Construção",
+    "Adequação de Cliente em Caixa de Conexão (B2B)":"Construção",
     # --------------------------------------------------------
     # DESLOCAMENTO
     # --------------------------------------------------------
