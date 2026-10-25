@@ -829,8 +829,11 @@ else:
 
     atingimento_meta = None
 
+# Gap positivo indica quanto falta para a meta; negativo, quanto foi superado.
+gap_meta = meta_financeira - total_valor
 
-col6, col7, col8, col9 = st.columns(4)
+
+col6, col7, col8, col9, col10 = st.columns(5)
 
 
 with col6:
@@ -868,6 +871,31 @@ with col9:
         "Ricardo R$ 198 mil e Wedson R$ 144 mil. Sem filtro, exibe a soma "
         "das metas. O percentual compara o Valor com a meta.",
     )
+
+
+with col10:
+
+    if meta_financeira <= 0:
+
+        st.metric("📉 Gap da meta", "—")
+
+    elif gap_meta > 0:
+
+        st.metric(
+            "📉 Gap da meta",
+            formatar_moeda(gap_meta),
+            delta=f"-{formatar_numero(gap_meta / meta_financeira * 100, 1)}% para a meta",
+            help="Diferença entre a meta financeira e o Valor realizado.",
+        )
+
+    else:
+
+        st.metric(
+            "📉 Gap da meta",
+            "+" + formatar_moeda(-gap_meta),
+            delta="Meta batida",
+            help="Valor realizado acima da meta financeira.",
+        )
 
 
 st.divider()
