@@ -158,6 +158,14 @@ st.caption(
 arquivo = "Base_Final.xlsx"
 
 
+# Metas financeiras por coordenador, indexadas pelo primeiro nome normalizado.
+METAS_COORDENADOR = {
+    "DIEGO": 72000,
+    "RICARDO": 198000,
+    "WEDSON": 144000,
+}
+
+
 # =========================================================
 # 6. CARREGAR BASE
 # =========================================================
@@ -805,7 +813,27 @@ else:
     taxa_presenca = 0
 
 
-col6, col7, col8 = st.columns(3)
+# Sem filtro de COORD, a meta exibida e a soma de todos os coordenadores.
+coordenadores_meta = coord if coord else list(lista_coord)
+
+meta_financeira = sum(
+    METAS_COORDENADOR.get(normalizar_nome(c).split(" ")[0], 0)
+    for c in coordenadores_meta
+)
+
+if meta_financeira > 0:
+
+    atingimento_meta = (total_valor / meta_financeira) * 100
+
+else:
+
+    atingimento_meta = None
+
+# Gap positivo indica quanto falta para a meta; negativo, quanto foi superado.
+gap_meta = meta_financeira - total_valor
+
+
+col6, col7, col8, col9, col10 = st.columns(5)
 
 
 with col6:
@@ -826,6 +854,48 @@ with col8:
         help="Dias com status ATIVO sobre o total de dias registrados "
         "na aba FORÇA DE TRABALHO, dentro dos filtros selecionados.",
     )
+
+
+with col9:
+
+    st.metric(
+        "🎯 Meta financeira",
+        formatar_moeda(meta_financeira) if meta_financeira > 0 else "—",
+        delta=(
+            f"{formatar_numero(atingimento_meta, 1)}% atingido"
+            if atingimento_meta is not None
+            else None
+        ),
+        delta_color="off",
+        help="Meta do(s) coordenador(es) filtrado(s): Diego R$ 72 mil, "
+        "Ricardo R$ 198 mil e Wedson R$ 144 mil. Sem filtro, exibe a soma "
+        "das metas. O percentual compara o Valor com a meta.",
+    )
+
+
+with col10:
+
+    if meta_financeira <= 0:
+
+        st.metric("📉 Gap da meta", "—")
+
+    elif gap_meta > 0:
+
+        st.metric(
+            "📉 Gap da meta",
+            formatar_moeda(gap_meta),
+            delta=f"-{formatar_numero(gap_meta / meta_financeira * 100, 1)}% para a meta",
+            help="Diferença entre a meta financeira e o Valor realizado.",
+        )
+
+    else:
+
+        st.metric(
+            "📉 Gap da meta",
+            "+" + formatar_moeda(-gap_meta),
+            delta="Meta batida",
+            help="Valor realizado acima da meta financeira.",
+        )
 
 
 st.divider()
