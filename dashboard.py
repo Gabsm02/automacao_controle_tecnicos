@@ -1,3 +1,4 @@
+import os
 import re
 from datetime import datetime
 
@@ -156,6 +157,18 @@ st.caption(
 # =========================================================
 
 arquivo = "Base_Final.xlsx"
+ARQUIVO_FORCA_TRABALHO = "PRODUÇÃO B2B-OUTUBRO.xlsx"
+ARQUIVO_CADERNO = "Caderno B2B_tempo.xlsx"
+
+
+def versao_arquivo(caminho):
+
+    # A data de modificação entra como argumento das funções com cache:
+    # quando a planilha é salva de novo, o Streamlit relê o arquivo.
+    try:
+        return os.path.getmtime(caminho)
+    except OSError:
+        return None
 
 
 # Metas financeiras por coordenador, indexadas pelo primeiro nome normalizado.
@@ -172,7 +185,7 @@ METAS_COORDENADOR = {
 
 
 @st.cache_data
-def carregar_base():
+def carregar_base(versao):
 
     df = pd.read_excel(arquivo, engine="openpyxl")
 
@@ -183,7 +196,7 @@ def carregar_base():
 
 try:
 
-    base = carregar_base()
+    base = carregar_base(versao_arquivo(arquivo))
 
 except FileNotFoundError:
 
@@ -199,10 +212,10 @@ except Exception as erro:
 
 
 @st.cache_data
-def carregar_forca_trabalho():
+def carregar_forca_trabalho(versao):
 
     df = pd.read_excel(
-        "PRODUÇÃO B2B-OUTUBRO.xlsx",
+        ARQUIVO_FORCA_TRABALHO,
         sheet_name="FORÇA DE TRABALHO",
         header=13,
         engine="openpyxl",
@@ -240,12 +253,12 @@ def formatar_numero(valor, casas=2):
 
 
 @st.cache_data
-def carregar_caderno():
+def carregar_caderno(versao):
 
     # A aba "Planilha1" relaciona cada Tipo da Base_Final com sua
     # pontuação e valor. Tipos marcados como "NA" não pontuam.
     df = pd.read_excel(
-        "Caderno B2B_tempo.xlsx",
+        ARQUIVO_CADERNO,
         sheet_name="Planilha1",
         engine="openpyxl",
     )
@@ -264,12 +277,12 @@ def carregar_caderno():
 
 
 @st.cache_data
-def carregar_presenca():
+def carregar_presenca(versao):
 
     # Converte a matriz Nome x Data da força de trabalho em uma linha
     # por técnico e dia. Alguns cabeçalhos vêm como "07/10/20262",
     # por isso a data é extraída por expressão regular.
-    df = carregar_forca_trabalho()
+    df = carregar_forca_trabalho(versao)
 
     df = df[df["Nome"].notna()].copy()
 
@@ -307,7 +320,7 @@ def carregar_presenca():
     return presenca[["CHAVE", "Nome", "Data", "Presença"]]
 
 
-forca_trabalho = carregar_forca_trabalho()
+forca_trabalho = carregar_forca_trabalho(versao_arquivo(ARQUIVO_FORCA_TRABALHO)).copy()
 
 forca_trabalho["CHAVE"] = forca_trabalho["Nome"].apply(normalizar_nome)
 
@@ -395,7 +408,7 @@ base["Data Concluída"] = pd.to_datetime(
 
 try:
 
-    caderno = carregar_caderno()
+    caderno = carregar_caderno(versao_arquivo(ARQUIVO_CADERNO))
 
 except Exception as erro:
 
@@ -432,7 +445,7 @@ cadastro_tecnicos = (
     .first()
 )
 
-presenca = carregar_presenca().merge(
+presenca = carregar_presenca(versao_arquivo(ARQUIVO_FORCA_TRABALHO)).merge(
     cadastro_tecnicos, left_on="CHAVE", right_index=True, how="left"
 )
 
